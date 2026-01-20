@@ -7,5 +7,5 @@
 # course vs DFW rate - barplot
 
 #3) How do departments compare?
-# highest standing and then
+# highest standing and thenhgadua
 
