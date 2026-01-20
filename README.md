@@ -3,55 +3,49 @@
 ## 📋 Overview
 This repository contains the collaborative work for our **2-week data analytics project**. The project is organized under a **hierarchical team structure** to ensure rapid development, clean integration, and minimal merge conflicts.
 
-*Note: This README is mostly AI Generated, and acts as a template until project requirements are finalized.*
-
 ---
 
 ## 🧠 Team Structure
 
-### Tech Lead ([Keion Vergara](https://github.com/notKeion))
+### Tech Lead ([Keion Vergara](https://github.com/notKeion)) & Product Owner ([Reagan Tullis](https://github.com/rrtullis))
 * **Pushes** all feature branches into `main`.
 * Oversees repository structure and architecture.
 * Resolves cross-feature merge conflicts.
-* Coordinates with Product Owner and enforces timeline/quality.
+* Coordinates with one another and Sentinels to enforce timeline/quality.
 
-### Product Owner ([Reagan Tullis](https://github.com/rrtullis))
-* **Pushes** all feature branches into `main`.
-* Oversees repository structure and architecture.
-* Resolves cross-feature merge conflicts.
-* Coordinates with Tech Lead and enforces timeline/quality.
 
 ### Sentinels (Feature Leads)
 
-Each Sentinel owns one feature domain and manages a team of 4:
+Each Sentinel owns one feature domain and manages a team of 5 contributors:
 
-* **Feature A:** @Sentinel1
-* **Feature B:** @Sentinel2
-* **Feature C:** @Sentinel3
-* **Feature D:** @Sentinel4
-* **Feature E:** @Sentinel5
+* **Feature A:** @aideneve15
+* **Feature B:** @maddiemann
+* **Feature C:** @Corban-Freese
+* **Feature D:** @AlexEmert
 
-**Responsibilities:** Review team PRs, manage the `feature/` branch, and report daily blockers to the Tech Lead.
+**Responsibilities:** Review your team's Pull Requests (Remember a PR is a request for them to merge their changes into your feature branch), manage the `feature/` branch, and report daily blockers to the Core Team.
 
 ### Contributors
 * Work **only** within assigned feature branches.
 * Submit PRs **only** to their Sentinel’s branch.
 * Keep PRs small, focused, and atomic.
+* Assign a commit message to as many file(s) changed as possible.
 
 ---
 
-## 🌳 Git Branching Strategy
+## 🌳 Git Branching Strategy Examples
 
 | Branch | Owner | Purpose |
 | :--- | :--- | :--- |
 | `main` | Tech Lead | Stable, production-ready code only. |
 | `feature/<name>` | Sentinel | Feature-specific integration branch. |
-| `dev/<name>/<task>` | Contributor | Individual task development. |
+| `feature/<name>/data` | Data Steward | Feature-specific data management branch. |
+| `feature/<name>/chart` | Chart Steward | Feature-specific chart management branch. |
 
 ### 🚫 Strict Rules
 * **No direct commits to `main`.**
 * **Contributors may NOT open PRs to `main`, you must open them to your Sentinel’s branch.**
-* **Sentinels** manage the merge from `dev` -> `feature`.
+* **Sentinels** manage the merge from `feature/<name>/*` -> `feature/<name>`.
 * **Tech Lead** manages the merge from `feature` -> `main`.
 
 ---
@@ -68,10 +62,10 @@ Before any PR, code must be reproducible and match documented schemas.
 
 ```text
 ├── data/           # raw, processed, external
-├── src/            # etl, analysis, modeling, visualization
-├── notebooks/      # Exploratory analysis (must be runnable)
+├── scripts/        # R scripts, analysis, modeling, viz.
+├── scratch/        # Everyone's scratch work, notebooks, etc.
 ├── docs/           # Data dictionary, assumptions, architecture
-├── tests/          # Validation scripts
+├── tests/          # Validation scripts (if needed)
 └── README.md
 ```
 
