@@ -11,6 +11,6 @@ This folder contains scratchwork and exploratory code for the project. It includ
 
 ### Folder Structure  
 - `R/<YOUR-NAME>`: Contains R scripts.  
-- `notebooks/<YOUR-NAME>`: Contains Jupyter notebooks.  
+- `notebooks/<YOUR-NAME>`: Contains Jupyter notebooks.
 
 Keep the folder organized and clean up unused files periodically.  
