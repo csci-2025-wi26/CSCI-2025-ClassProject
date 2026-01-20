@@ -1,0 +1,20 @@
+---
+title: "Rentention Visualization"
+author: "Retention Feature Group"
+format: html
+---
+
+# Goals 
+
+Do students graduate in their department? 
+Why do they leave?
+
+Identify after what courses student's changing their major or dropping out?
+
+After what year is a student likely to change their department?
+
+
+
+# Introduction
+
+Important variables - StudentID, Year, Major
