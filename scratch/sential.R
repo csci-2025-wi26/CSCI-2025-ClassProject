@@ -16,3 +16,5 @@ plot <- cleaned_data |>
   subtitle = "Mean of numeric course grades, aggregated by department",
   caption = "Grades averaged within each department; missing values excluded"
 )
+
+print(gradeAverageDepartment, n = 26)
