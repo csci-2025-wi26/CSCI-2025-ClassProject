@@ -1,0 +1,33 @@
+name: Sync main into feature branches
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - ".github/workflows/**"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync branches
+        run: |
+          branches=("feature/outcomes" "feature/Enrollment" "feature/retention" "feature/performance")
+
+          for branch in "${branches[@]}"; do
+            git checkout $branch
+            git merge origin/main --no-edit || { echo "Merge conflict in $branch"; exit 1; }
+            git push origin $branch
+          done
