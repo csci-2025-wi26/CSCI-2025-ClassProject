@@ -1,10 +1,7 @@
-library(shiny)
-library(bslib)
 library(tidyverse)
-library(arrow)
 library(dplyr)
 
-raw_data <- read_csv('data/raw/registrar_data.csv')
+raw_data <- vroom::vroom("C:\\Users\\logan\\CSCI-2025-ClassProject\\data\\raw\\registrar_data.csv")
 
 #adding dfw column
 clean_data <- raw_data |> 
@@ -31,22 +28,25 @@ updated_clean_data <- clean_data |>
     xstc_verified_lettr_grade == "F" ~ 0.00 
   ))
 
-
 # Shiny stuff
+library(shiny)
+library(bslib)
 
 ui <- fluidPage(
   navlistPanel(
-    id = "tabset",
     "Academic Performance",
-    tabPanel("Q1", value = "Q1"),
-      plotOutput("plotq1"),
+    tabPanel("Q1", value = "Q1",
+      plotOutput("plotq1")
+    ),
     tabPanel("Q2", value = "Q2"),
     tabPanel("Q3", value = "Q3")
   )
 )
 
 server <- function(input, output, session) {
-  output$plotq1 <- ggplot(updated_cleaned_data)
+  output$plotq1 <- renderPlot({
+    ggplot(data.frame(x = c(1:5), y = c(6:10)), aes(x = x, y = y)) +
+      geom_point()})
 }
 
 shinyApp(ui, server)
