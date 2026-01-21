@@ -15,6 +15,9 @@ After what year is a student likely to change their department?
 
 
 
-# Introduction
+# Charts
+
+Chart by major showing number of classes students take 
+    How many students stop after taking one or two classes?
 
 Important variables - StudentID, Year, Major
