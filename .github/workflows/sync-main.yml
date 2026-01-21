@@ -1,4 +1,4 @@
-name: Sync main into feature branches
+name: Sync main into feature branches 
 
 on:
   push:
@@ -10,9 +10,12 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write  # Required to create issues
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4 
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -23,11 +26,36 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Sync branches
+        id: sync_step
         run: |
           branches=("feature/outcomes" "feature/Enrollment" "feature/retention" "feature/performance")
 
           for branch in "${branches[@]}"; do
+            echo "Syncing $branch..."
             git checkout $branch
-            git merge origin/main --no-edit || { echo "Merge conflict in $branch"; exit 1; }
+            # Capture failure but keep going to identify which branch failed
+            if ! git merge origin/main --no-edit; then
+              echo "FAILED_BRANCH=$branch" >> $GITHUB_ENV
+              exit 1
+            fi
             git push origin $branch
           done
+
+      - name: Create Issue on Failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh issue create \
+            --title "Sync Failure: Merge Conflict in ${{ env.FAILED_BRANCH }}" \
+            --body "## ⚠️ Sync Automation Failed
+            
+            The automated sync from \`main\` into \`${{ env.FAILED_BRANCH }}\` failed due to merge conflicts.
+            
+            **Action Required:**
+            1. Pull the latest \`${{ env.FAILED_BRANCH }}\` locally.
+            2. Merge \`main\` manually: \`git merge main\`.
+            3. Resolve conflicts and push.
+            
+            **Workflow Run:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
+            --label "bug,automated-issue"
