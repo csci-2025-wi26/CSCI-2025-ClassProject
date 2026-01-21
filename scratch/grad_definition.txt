@@ -1,0 +1,13 @@
+use person_xper_grad_term
+- note: xper does *not* mean expected, it's a database identifier
+
+if there's NA in grad_term and year in grad_academic_year, then add value in column from grad_year
+
+does double value in grad_term mean pushed grad date back? no, graduate student year
+
+if grad, look at year grad, go back three to four years:
+we can assume that four years
+# of semesters
+
+
+outcome: switched majors? is that related to performance?
