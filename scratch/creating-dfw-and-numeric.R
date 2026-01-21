@@ -28,38 +28,11 @@ updated_clean_data <- clean_data |>
     xstc_verified_lettr_grade == "F" ~ 0.00 
   )) 
 
-#make AU be NA so you can drop them all.
+glimpse(updated_clean_data)
 
-updated_clean_data |> 
-  mutate(xstc_verified_lettr_grade = na_if(xstc_verified_lettr_grade, "AU")) 
-
-
-#####
-
-
-#install.packages('arrow')
+install.packages('arrow')
 library(arrow)
 arrow::write_parquet(updated_clean_data, "data/processed/cleaned_data.parquet")
 
 # Run this command to bring the dataframe into your script:
-# cleaned_data <- read_parquet("data/processed/cleaned_data.parquet")
-
-
-######
-
-
-
-
-
-
-
-
-
-
-#creating df's with dfw rates
-# dfw_rates_gender <- updated_clean_data |> 
-#   group_by(person_gender) |> 
-#   summarise(mean(dfw, na.rm = TRUE))
-
-# dfw_rates_departments 
-
+cleaned_data <- read_parquet("data/processed/cleaned_data.parquet")
