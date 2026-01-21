@@ -1,7 +1,7 @@
 library(tidyverse)
-raw_data <- read_csv("data/raw/registrar_data.csv")
+cleaned_data <- read_csv("data/clean/registrar_cleaned.csv")
 
-graduation_data <- raw_data |> 
+graduation_data <- cleaned_data |> 
   select(
     stc_person, 
     students_xstu_grad_acad_year, 
@@ -21,7 +21,9 @@ graduation_data <- raw_data |>
   select(stc_person, graduated)
 
 graduation_data <- graduation_data |> 
-  right_join(raw_data, join_by(stc_person)) |> 
-  replace_na(graduated = FALSE) |> # if the student didn't graduate, they didn't graduate
+  right_join(cleaned_data, join_by(stc_person)) |> 
+  mutate(graduated = coalesce(graduated, FALSE)) |> # if the student didn't graduate, they didn't graduate
   relocate(stc_person, graduated) |> 
   distinct(stc_person, .keep_all = TRUE)
+
+View(graduation_data)
