@@ -14,3 +14,13 @@ plot_data <- registrar_data |>
 
 ggplot(plot_data, aes(x = factor(n), y = freq)) +
   geom_col(fill = "steelblue")
+
+
+
+fail_data <- registrar_data |>
+  filter(xstc_verified_lettr_grade == "F") |>
+  #count(stc_person) |>
+  #count(n, name = "freq")
+
+ggplot(plot_data, aes(x = factor(n), y = freq)) +
+  geom_col(fill = "steelblue")
