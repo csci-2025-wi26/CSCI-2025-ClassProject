@@ -1,8 +1,8 @@
 library(tidyverse)
 library(arrow)
-cleaned_data <- read_parquet("data/processed/cleaned_data.parquet")
+cleaned_data <- read_csv("data/processed/cleaned_data.csv")
 
-cleaned_data |> 
+plot <- cleaned_data |> 
   select(stc_person, xstc_verified_lettr_grade, dfw, grade_numeric, stc_depts, stc_course_name) |> 
   group_by(stc_depts) |> 
   mutate(mean_department = mean(grade_numeric, na.rm = TRUE)) |>
@@ -16,5 +16,3 @@ cleaned_data |>
   subtitle = "Mean of numeric course grades, aggregated by department",
   caption = "Grades averaged within each department; missing values excluded"
 )
-
-print(gradeAverageDepartment, n = 26)
