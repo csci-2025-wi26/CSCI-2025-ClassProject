@@ -1,12 +1,3 @@
-library(shiny)
-
-
-ui <- fluidPage(
-  
-)
-
-server <- function(input, output, session) {
-
-}
-
-shinyApp(ui, server)
+library(tidyverse)
+registrar_data <- read_csv("data/raw/registrar_data.csv")
+registrar_data
