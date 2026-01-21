@@ -30,9 +30,9 @@ updated_clean_data <- clean_data |>
 
 glimpse(updated_clean_data)
 
-#install.packages('arrow')
+install.packages('arrow')
 library(arrow)
 arrow::write_parquet(updated_clean_data, "data/processed/cleaned_data.parquet")
 
 # Run this command to bring the dataframe into your script:
-# cleaned_data <- read_parquet("data/processed/cleaned_data.parquet")
+cleaned_data <- read_parquet("data/processed/cleaned_data.parquet")
