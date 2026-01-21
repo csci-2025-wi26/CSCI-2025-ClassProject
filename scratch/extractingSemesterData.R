@@ -12,13 +12,16 @@ cleaned_data <- cleaned_data |>
       term == "FA" ~ 3,
       TRUE ~ NA_real_
     ),
-    semester_index = year * 10 + term_order
+    semester_index = year * 10 + term_order    #This line is creating a numeric column to sort by
   ) 
 
-first_semester_grades <- cleaned_data |> 
+first_semester_grades_summary <- cleaned_data |> 
   group_by(stc_person) |> 
-  filter(semester_index == min(semester_index, na.rm = TRUE)) |>
-  select(semester_index, stc_person, grade_numeric)
+  filter(semester_index == min(semester_index, na.rm = TRUE)) |> #select the first semester; min of semester_index
+  summarise(
+    first_semester_mean_grade = mean(grade_numeric, na.rm = TRUE),
+    first_semester_dfw = mean(dfw, na.rm = TRUE)
+  )
 
 first_two_semesters <- cleaned_data |> 
   group_by(stc_person) |> 
@@ -26,3 +29,4 @@ first_two_semesters <- cleaned_data |>
   filter(row_number() <= 2) |> 
   ungroup() |> 
   head()
+
