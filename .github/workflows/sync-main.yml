@@ -57,5 +57,4 @@ jobs:
             2. Merge \`main\` manually: \`git merge main\`.
             3. Resolve conflicts and push.
             
-            **Workflow Run:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})" \
-            --label "bug,automated-issue"
+            **Workflow Run:** [View Logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
