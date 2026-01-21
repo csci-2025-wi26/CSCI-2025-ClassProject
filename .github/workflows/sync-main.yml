@@ -28,6 +28,6 @@ jobs:
 
           for branch in "${branches[@]}"; do
             git checkout $branch
-            git merge origin/main --no-edit || exit 1
+            git merge origin/main --no-edit || { echo "Merge conflict in $branch"; exit 1; }
             git push origin $branch
           done
