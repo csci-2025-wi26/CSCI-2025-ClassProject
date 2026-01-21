@@ -1,6 +1,6 @@
 ---
 title: "Enrollment Trends & Insights: Proposal"
-subtitle: "College of Idaho Enrollment Visualization Project"
+subtitle: "Enrollment Branch"
 format: revealjs
 theme: simple
 transition: fade
@@ -13,7 +13,7 @@ How has student enrollment for a selected major changed over time from 2019 to 2
 
 ---
 
-## Planned Visualizations
+## Planned Visualization
 
 We plan to include the following visualization:
 
@@ -21,12 +21,10 @@ Bar chart showing total student enrollment per year for the selected major, with
 
 ---
 
-## Plan
+## Next steps
 
-1. Clean data: 
-- Select distinct ID fro each year.
-- Clean the major column and put the second major in a new column.
-- Count how may majors per year 
+1. Clean data for analysis.
+2. Create visualizations in Shiny.
 
 
 
