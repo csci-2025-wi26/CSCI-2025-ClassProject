@@ -1,4 +1,4 @@
-name: Sync main into feature branches 
+name: Sync main into feature branch 
 
 on:
   push:
