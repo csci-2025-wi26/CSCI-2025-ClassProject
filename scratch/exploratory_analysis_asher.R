@@ -1,5 +1,9 @@
 library(tidyverse)
+raw_data <- read_csv("data/raw/registrar_data.csv")
+View(raw_data)
+print(raw_data$race)
 cleaned_data <- read_csv("data/clean/registrar_cleaned.csv")
+View(cleaned_data)
 
 graduation_data <- cleaned_data |> 
   select(
@@ -26,4 +30,15 @@ graduation_data <- graduation_data |>
   relocate(stc_person, graduated) |> 
   distinct(stc_person, .keep_all = TRUE)
 
-View(graduation_data)
+by_gender <- graduation_data |> 
+  group_by(race_ethnicity) |> 
+  mutate(
+    prop_grad = mean(graduated),
+    .after = graduated
+  ) |> 
+  relocate(re, .after = prop_grad) |> 
+  arrange(race_ethnicity)
+
+
+ggplot(by_gender, aes(race_ethnicity, prop_grad)) +
+  geom_col()
