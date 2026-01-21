@@ -3,26 +3,12 @@ library(dplyr)
 
 raw_data <- read_csv('data/raw/registrar_data.csv')
 
-
-#cleaning
+#adding dfw column
 clean_data <- raw_data |> 
   mutate(dfw = case_when(
     xstc_verified_lettr_grade %in% c("A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "P") ~ 1, 
     xstc_verified_lettr_grade %in% c('W', "F", "D-", "D", "D+")  ~ 0
   ))
-
-#test -- should be empty.
-clean_data |> 
-  select(xstc_verified_lettr_grade, dfw) |>  
-  filter(dfw != 0 & dfw != 1 | is.na(dfw)) |> 
-  filter(!is.na(xstc_verified_lettr_grade) & xstc_verified_lettr_grade != "AU") |> 
-  glimpse()
-
-#look at only the letter grade and dfw
-clean_data |> 
-  select(xstc_verified_lettr_grade, dfw) |> 
-  glimpse()
-
 
 #__________add numeric gpa_______________
 
