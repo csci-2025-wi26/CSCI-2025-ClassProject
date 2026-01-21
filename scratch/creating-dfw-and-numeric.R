@@ -30,9 +30,10 @@ updated_clean_data <- clean_data |>
 
 glimpse(updated_clean_data)
 
-install.packages('arrow')
-library(arrow)
-arrow::write_parquet(updated_clean_data, "data/processed/cleaned_data.parquet")
+updated_clean_data <- updated_clean_data |> 
+  mutate(xstc_verified_lettr_grade = na_if(xstc_verified_lettr_grade, "AU")) 
+
+write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
 
 # Run this command to bring the dataframe into your script:
-cleaned_data <- read_parquet("data/processed/cleaned_data.parquet")
+# cleaned_data <- read_csv("data/processed/cleaned_data.csv")
