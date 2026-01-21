@@ -25,7 +25,7 @@ updated_clean_data <- clean_data |>
     xstc_verified_lettr_grade == "D+" ~ 1.30,
     xstc_verified_lettr_grade == "D" ~ 1.00,
     xstc_verified_lettr_grade == "D-" ~ 0.70,
-    xstc_verified_lettr_grade == "F" ~ 0.00 ,
+    xstc_verified_lettr_grade == "F" ~ 0.00 
   )) 
 
 glimpse(updated_clean_data)
