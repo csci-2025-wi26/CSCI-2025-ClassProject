@@ -1,0 +1,25 @@
+name: Sync main into feature branches
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync branches
+        run: |
+          branches=("feature/outcomes" "feature/Enrollment" "feature/retention" "feature/performance")
+
+          for branch in "${branches[@]}"; do
+            git checkout $branch
+            git merge origin/main --no-edit || exit 1
+            git push origin $branch
+          done
