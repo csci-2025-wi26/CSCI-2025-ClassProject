@@ -1,33 +1,9 @@
 ---
-title: "Enrollment Trends & Insights: Proposals"
-subtitle: "College of Idaho Enrollment Visualization Project"
-author: "Team Sentinel"
+title: "Enrollment Trends & Insights: Proposal"
+subtitle: "College of Idaho Enrollment Visualization"
 format: revealjs
 theme: simple
 transition: fade
----
-
-## Project Motivation
-
-College administrators and stakeholders need to understand enrollment trends quickly and accurately.
-
-While visualizations show patterns, they often require interpretation to answer:
-- What changed?
-- Why does it matter?
-- What should we notice first?
-
-Our project combines **interactive enrollment visualizations** with an **automated narrative system** that explains the data clearly and responsibly.
-
----
-
-## Project Goal
-
-Our goal is to build an interactive dashboard that:
-- Visualizes College of Idaho enrollment data
-- Highlights trends, composition, and changes over time
-- Automatically generates plain-language explanations for each chart
-
-This ensures the data is **accessible**, **interpretable**, and **actionable**.
 
 ---
 
