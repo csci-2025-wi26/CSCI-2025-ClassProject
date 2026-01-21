@@ -9,8 +9,7 @@
 <link href="Enrollment-Proposal_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
   <meta name="generator" content="quarto-1.7.32">
 
-  <meta name="author" content="Team Sentinel">
-  <title>Enrollment Trends &amp; Insights: Proposals</title>
+  <title>Enrollment Trends &amp; Insights: Proposal</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -127,108 +126,29 @@
     <div class="slides">
 
 <section id="title-slide" class="quarto-title-block center">
-  <h1 class="title">Enrollment Trends &amp; Insights: Proposals</h1>
+  <h1 class="title">Enrollment Trends &amp; Insights: Proposal</h1>
   <p class="subtitle">College of Idaho Enrollment Visualization Project</p>
 
 <div class="quarto-title-authors">
-<div class="quarto-title-author">
-<div class="quarto-title-author-name">
-Team Sentinel 
-</div>
-</div>
 </div>
 
 </section>
-<section id="project-motivation" class="slide level2">
-<h2>Project Motivation</h2>
-<p>College administrators and stakeholders need to understand enrollment trends quickly and accurately.</p>
-<p>While visualizations show patterns, they often require interpretation to answer: - What changed? - Why does it matter? - What should we notice first?</p>
-<p>Our project combines <strong>interactive enrollment visualizations</strong> with an <strong>automated narrative system</strong> that explains the data clearly and responsibly.</p>
-</section>
-<section id="project-goal" class="slide level2">
-<h2>Project Goal</h2>
-<p>Our goal is to build an interactive dashboard that: - Visualizes College of Idaho enrollment data - Highlights trends, composition, and changes over time - Automatically generates plain-language explanations for each chart</p>
-<p>This ensures the data is <strong>accessible</strong>, <strong>interpretable</strong>, and <strong>actionable</strong>.</p>
-</section>
-<section id="key-questions-we-will-answer" class="slide level2">
-<h2>Key Questions We Will Answer</h2>
-<ul>
-<li>How has total enrollment changed over time?</li>
-<li>What portions of enrollment are first-year vs continuing students?</li>
-<li>Where are students coming from geographically?</li>
-<li>Which academic programs are growing or shrinking?</li>
-<li>What are the most important takeaways from each visualization?</li>
-</ul>
+<section id="question" class="slide level2">
+<h2>Question</h2>
+<p>How have enrollment trends across different major changed from 2019 to 2024, and which majors show the strongest growth or decline over time?</p>
 </section>
 <section id="planned-visualizations" class="slide level2">
 <h2>Planned Visualizations</h2>
-<p>We plan to include the following visualizations:</p>
-<ul>
-<li>Line chart: Total enrollment by year</li>
-<li>Stacked bar chart: Enrollment by class standing</li>
-<li>Bar chart: In-state vs out-of-state enrollment</li>
-<li>Bar chart: Enrollment by major or division</li>
-<li>Change-focused charts highlighting growth or decline</li>
-</ul>
-<p>Each visualization will be paired with automated narrative text.</p>
-</section>
-<section id="the-narrator-feature-context-generator" class="slide level2">
-<h2>The Narrator Feature (Context Generator)</h2>
-<p>To help users interpret charts, our dashboard will include a <strong>Narrator module</strong> that:</p>
-<ul>
-<li>Automatically summarizes what each chart shows</li>
-<li>Uses a “Mad Libs” style text template</li>
-<li>Adapts language based on the data (increase, decrease, stable)</li>
-<li>Flags uncertainty or missing data when relevant</li>
-</ul>
-<p>Example: &gt; “Total enrollment increased by 4.2% from Fall 2024 to Fall 2025, driven primarily by first-year students.”</p>
-</section>
-<section id="how-the-narrator-works-conceptual" class="slide level2">
-<h2>How the Narrator Works (Conceptual)</h2>
-<p>For each visualization, the Narrator will: 1. Extract key summary statistics 2. Determine trends and direction of change 3. Select an appropriate text template 4. Generate a concise, readable explanation</p>
-<p>This approach ensures consistency across the dashboard and reduces misinterpretation.</p>
-</section>
-<section id="quality-assurance-data-responsibility" class="slide level2">
-<h2>Quality Assurance &amp; Data Responsibility</h2>
-<p>The Narrator also serves as a built-in Quality Assurance layer by: - Avoiding misleading claims when data is incomplete - Handling missing values and small sample sizes - Ensuring consistent rounding and terminology - Adding notes when interpretation should be cautious</p>
-<p>This helps maintain accuracy and trust in the dashboard.</p>
-</section>
-<section id="tools-technologies" class="slide level2">
-<h2>Tools &amp; Technologies</h2>
-<ul>
-<li>R and tidyverse for data manipulation</li>
-<li>ggplot2 for visualization</li>
-<li>stringr and glue for narrative generation</li>
-<li>Quarto for presentation and documentation</li>
-<li>GitHub for version control and collaboration</li>
-</ul>
-</section>
-<section id="project-timeline" class="slide level2">
-<h2>Project Timeline</h2>
-<ul>
-<li>Data exploration and cleaning</li>
-<li>Visualization development</li>
-<li>Narrative template design</li>
-<li>QA testing and validation</li>
-<li>Final dashboard integration and presentation</li>
-</ul>
-<p>Each component will be developed in parallel and integrated incrementally.</p>
+<p>We plan to include the following visualization:</p>
+<p>Bar chart showing total student enrollment per year for the selected major, with bars colored by race.</p>
 </section>
 <section id="expected-outcome" class="slide level2">
 <h2>Expected Outcome</h2>
 <p>By the end of the project, we will deliver: - A polished set of enrollment visualizations - Automated narrative explanations for each chart - A dashboard that communicates insights clearly to all users</p>
 <p>This project demonstrates both technical and interpretive data skills.</p>
 </section>
-<section id="next-steps" class="slide level2">
-<h2>Next Steps</h2>
-<ul>
-<li>Finalize enrollment dataset structure</li>
-<li>Assign visualization ownership</li>
-<li>Begin narrator template implementation</li>
-<li>Conduct early QA testing</li>
-<li>Merge features into final dashboard</li>
-</ul>
-<p>Thank you!</p>
+<section id="thank-you" class="slide level2">
+<h2>Thank you</h2>
 
 </section>
     </div>
