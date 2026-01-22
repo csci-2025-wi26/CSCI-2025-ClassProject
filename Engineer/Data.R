@@ -10,5 +10,3 @@ enrollment_clean_data <- enrollment_registrar_data |>
   mutate(major = first(students_stu_majors))
 
 glimpse(enrollment_clean_data)
-
-
