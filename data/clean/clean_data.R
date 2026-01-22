@@ -55,6 +55,7 @@ grad_column <- cleaned_data |>
   distinct(stc_person, .keep_all = TRUE) |> 
   right_join(cleaned_data, join_by(stc_person))
 
-write_csv(cleaned_data, "CSCI-2025-ClassProject/data/clean/registrar_cleaned.csv")
+
+write_csv(cleaned_data, "data/clean/registrar_cleaned.csv")
 
 glimpse(cleaned_data)
