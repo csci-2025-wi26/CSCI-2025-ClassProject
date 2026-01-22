@@ -13,8 +13,14 @@ Identify after what courses student's changing their major or dropping out?
 
 After what year is a student likely to change their department?
 
+If one's grades are lower, are they more likely to take less classes in that field?
+    See how many classes students take in a field when they have an F
 
 
-# Introduction
+# Charts
+
+Chart by major showing number of classes students take 
+    How many students stop after taking one or two classes?
 
 Important variables - StudentID, Year, Major
+CLeaning Data - stc_depts needs naming to be streamlined, bus vs buacc
