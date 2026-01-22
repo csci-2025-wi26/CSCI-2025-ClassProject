@@ -72,7 +72,7 @@ cleaned_data <- cleaned_data |>
   mutate(
     refined_gender = case_when(
       person_gender_identity == "TRANSGEN" ~ "Transgender",
-      TRUE ~ gender 
+      TRUE ~ gender
     )
   ) |>
   group_by(stc_person) |>
@@ -80,8 +80,8 @@ cleaned_data <- cleaned_data |>
     start_term_index = min(term_index, na.rm = TRUE),
     ever_graduated = any(!is.na(person_xper_grad_term)),
     years_to_grad = if_else(
-      !is.na(person_xper_grad_term), 
-      term_index - start_term_index, 
+      !is.na(person_xper_grad_term),
+      term_index - start_term_index,
       NA_real_
     )
   ) |>
@@ -95,12 +95,21 @@ cleaned_data <- cleaned_data |>
   ) |>
   ungroup()
 
+<<<<<<< HEAD
 cleaned_data <- cleaned_data |>
   group_by(stc_person) |>
   mutate(classes_taken = n())
 
 cleaned_data |>
   select(classes_taken)
+=======
+cleaned_data <- cleaned_data |> #col to look at major switching
+  group_by(stc_person) |>
+
+  ungroup()
+
+glimpse(cleaned_data)
+>>>>>>> c176389c18fdb4162b1b642b1b61dd1122fc8c98
 
 write_csv(
   cleaned_data,
