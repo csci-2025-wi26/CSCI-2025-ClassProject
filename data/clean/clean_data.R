@@ -72,7 +72,7 @@ cleaned_data <- cleaned_data |>
   mutate(
     refined_gender = case_when(
       person_gender_identity == "TRANSGEN" ~ "Transgender",
-      TRUE ~ gender 
+      TRUE ~ gender
     )
   ) |>
   group_by(stc_person) |>
@@ -80,8 +80,8 @@ cleaned_data <- cleaned_data |>
     start_term_index = min(term_index, na.rm = TRUE),
     ever_graduated = any(!is.na(person_xper_grad_term)),
     years_to_grad = if_else(
-      !is.na(person_xper_grad_term), 
-      term_index - start_term_index, 
+      !is.na(person_xper_grad_term),
+      term_index - start_term_index,
       NA_real_
     )
   ) |>
@@ -94,6 +94,11 @@ cleaned_data <- cleaned_data |>
       TRUE ~ "Stayed"
     )
   ) |>
+  ungroup()
+
+cleaned_data <- cleaned_data |> #col to look at major switching
+  group_by(stc_person) |>
+
   ungroup()
 
 glimpse(cleaned_data)
