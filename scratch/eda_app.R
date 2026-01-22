@@ -1,9 +1,6 @@
 library(tidyverse)
 library(dplyr)
 
-library(tidyverse)
-library(dplyr)
-
 raw_data <- vroom::vroom("C:\\Users\\logan\\CSCI-2025-ClassProject\\data\\raw\\registrar_data.csv")
 
 #adding dfw column
@@ -107,14 +104,45 @@ ui <- fluidPage(
           tableOutput("plotq1")
         )
       )
+    ),
+    tabPanel("Q2",
+      fluidRow(
+        column(12
+        )
+      ),
+      fluidRow(
+        column(12,
+          plotOutput("plotq2")
+        )
+      )
+    ),
+    tabPanel("Q3",
+      fluidRow(
+        column(12
+        )
+      ),
+      fluidRow(
+        column(12,
+          plotOutput("plotq3")
+        )
+      )
     )
   )
 )
 
 server <- function(input, output, session) {
+  x_val <- reactive(case_when(
+    input$opt1 == "DFW" ~ updated_clean_data$dfw,
+    input$opt1 == "GPA" ~ updated_clean_data$grade_numeric
+  ))
+  
+#  df <- reactive(
+#    updated_clean_data |>
+#      select(students_stu_class)
+#  )
 
   output$plotq1 <- renderTable({
-    head(raw_data)
+    updated_clean_data
   })
   
   output$plotq2 <- renderPlot({
