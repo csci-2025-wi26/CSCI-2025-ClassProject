@@ -4,14 +4,17 @@ cleaned_data <- read_csv("data/processed/cleaned_data.csv")
 
 glimpse(cleaned_data)
 
-
 cleaned_data |> 
-  filter(str_detect(stc_depts, ",")|str_detect(stc_depts, " ")) |> 
-  count(stc_depts)
+  filter(str_detect(stc_course_name, "^[A-Za-z]{3}-\d{3}$")) |> 
+  glimpse()
 
-cleaned_data |> 
-  select(stc_course_name, crs_no, student_course_sec_stc_title, crs_level, upper_lower_div) |>
-  filter(crs_no == "1")
+# cleaned_data |> 
+#   filter(str_detect(stc_depts, ",")|str_detect(stc_depts, " ")) |> 
+#   count(stc_depts)
+
+# cleaned_data |> 
+#   select(stc_course_name, crs_no, student_course_sec_stc_title, crs_level, upper_lower_div) |>
+#   filter(crs_no == "1")
 
 
 
