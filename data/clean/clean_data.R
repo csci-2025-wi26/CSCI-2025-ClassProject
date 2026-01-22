@@ -30,7 +30,8 @@ cleaned_data <- raw_data |>
     ),
     term_index = term_year + term_val
   ) |>
-  mutate(primary_major = coalesce(students_stu_active_majors, stu_acad_programs))
+  mutate(primary_major = coalesce(students_stu_active_majors, stu_acad_programs)) |>
+  mutate(graduated = any(!is.na(person_xper_grad_term)))
 
 # View(cleaned_data)
 # # add a refined grad column

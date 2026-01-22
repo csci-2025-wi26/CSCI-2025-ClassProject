@@ -72,6 +72,8 @@ student_year_summary <- cleaned_data %>%
     graduated = any(!is.na(person_xper_grad_term)),
     .groups = "drop"
   )
+student_year_summary
+
 
 target_dept <- "PSY" 
 analysis_data %>%
