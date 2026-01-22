@@ -36,17 +36,40 @@ ui <- fluidPage(
   navlistPanel(
     "Academic Performance",
     tabPanel("Q1", value = "Q1",
+      selectInput("opt1", "DFW Rate or GPA?",
+        choices = c("DFW Rate", "GPA")),
+      selectInput("opt2", "Barplot, Boxplot, or Violinplot?",
+        choices = c("Barplot", "Boxplot", "Violinplot")),
+      radioButtons("opt3", "Select Demographics.",
+        choices = c("Gender", "Race", "SES")),
       plotOutput("plotq1")
     ),
-    tabPanel("Q2", value = "Q2"),
-    tabPanel("Q3", value = "Q3")
-  )
+    tabPanel("Q2", value = "Q2",
+      plotOutput("plotq2")
+    ),
+    tabPanel("Q3", value = "Q3",
+      plotOutput("plotq3"),
+      radioButtons("opt3", "Select Demographics.",
+        choices = c("Gender", "Race", "SES"))
+    ),
+  widths = c(2, 10))
 )
 
 server <- function(input, output, session) {
   output$plotq1 <- renderPlot({
     ggplot(data.frame(x = c(1:5), y = c(6:10)), aes(x = x, y = y)) +
-      geom_point()})
+      geom_point()
+  })
+  
+  output$plotq2 <- renderPlot({
+    ggplot(data.frame(x = c(10:6), y = c(6:10)), aes(x = x, y = y)) +
+      geom_point()
+  })
+
+  output$plotq3 <- renderPlot({
+    ggplot(data.frame(x = c(1:5), y = c(5:1)), aes(x = x, y = y)) +
+      geom_point()
+  })
 }
 
 shinyApp(ui, server)
