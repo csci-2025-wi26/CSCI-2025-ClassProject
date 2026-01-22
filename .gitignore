@@ -1,2 +1,5 @@
 README.html
 /README_files
+/renv/library/
+/renv/python/
+/renv/staging/

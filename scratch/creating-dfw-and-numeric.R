@@ -28,12 +28,14 @@ updated_clean_data <- clean_data |>
     xstc_verified_lettr_grade == "F" ~ 0.00 
   )) 
 
-glimpse(updated_clean_data)
-
+#turn all the AU grades in letter grades column into NA's so they can be handled.
 updated_clean_data <- updated_clean_data |> 
   mutate(xstc_verified_lettr_grade = na_if(xstc_verified_lettr_grade, "AU")) 
 
 write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
 
+
 # Run this command to bring the dataframe into your script:
 # cleaned_data <- read_csv("data/processed/cleaned_data.csv")
+
+glimpse(updated_clean_data)
