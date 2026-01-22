@@ -68,6 +68,14 @@ cleaned_data <- cleaned_data |>
     }
   )
 
+cleaned_data <- cleaned_data %>%
+  mutate(
+    refined_gender = case_when(
+      person_gender_identity == "TRANSGEN" ~ "Transgender",
+      TRUE ~ gender 
+    )
+  )
+
 write_csv(
   cleaned_data,
   "data/clean/registrar_cleaned.csv"
