@@ -1,0 +1,11 @@
+main fluid page function
+title (college branded) navlist side 
+navlist:
+- enrollment
+- retention
+- outcomes
+- performance
+
+all group ui in our tabs 
+selection for department / graduate/undergraduate
+no dynamic/interactive plots
