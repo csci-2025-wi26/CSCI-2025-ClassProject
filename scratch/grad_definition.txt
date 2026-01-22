@@ -11,3 +11,10 @@ we can assume that four years
 
 
 outcome: switched majors? is that related to performance?
+
+columns we need:
+- dfw # t/f or d/f/w/p 
+- grad_year
+- class_standing
+- grad_time # how many years to graduation?
+- did go on to graduate school here?
