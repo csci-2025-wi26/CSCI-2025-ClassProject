@@ -45,6 +45,7 @@ cleaned_data <- raw_data |>
 #     }
 #   )
 
+
 write_csv(cleaned_data, "CSCI-2025-ClassProject/data/clean/registrar_cleaned.csv")
 
 glimpse(cleaned_data)
