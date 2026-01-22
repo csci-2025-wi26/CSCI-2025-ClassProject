@@ -66,10 +66,7 @@ cleaned_data <- cleaned_data |>
         )
       )
     }
-  ) |>
-  select(stc_person, grad_year) |>
-  distinct(stc_person, .keep_all = TRUE) |>
-  right_join(cleaned_data, join_by(stc_person))
+  )
 
 write_csv(
   cleaned_data,
