@@ -32,6 +32,19 @@ cleaned_data <- raw_data |>
   ) |>
   mutate(primary_major = coalesce(students_stu_active_majors, stu_acad_programs))
 
+# View(cleaned_data)
+# # add a refined grad column
+# grad_column <- cleaned_data |> 
+#   mutate(
+#     grad_year = { # need to handle double values; separate graduate level graduation date column?
+#       if_else(
+#         str_extract(person_xper_grad_term, "(FA|SP|WI|SU)") == "FA", 
+#         2000 + parse_number(person_xper_grad_term), # fall term
+#         2000 + parse_number(person_xper_grad_term) - 1 # spring, winter, and summer terms list academic year
+#       )
+#     }
+#   )
+
 write_csv(cleaned_data, "CSCI-2025-ClassProject/data/clean/registrar_cleaned.csv")
 
 glimpse(cleaned_data)
