@@ -1,7 +1,7 @@
 library(tidyverse)
 library(janitor)
 
-raw_data <- read.csv("data/raw/registrar_data.csv") |>
+raw_data <- read.csv("CSCI-2025-ClassProject/data/raw/registrar_data.csv") |>
   clean_names()
 
 glimpse(raw_data)
