@@ -39,13 +39,14 @@ updated_clean_data <- updated_clean_data |>
   ) 
 
 #make a column that specifies the course level so that users can eventually be able to filter/select by course level. Assumed 3-digit format still. Tested and confirmed no NA's in this column.
+#note that this will work for BOTH the 3-digit format, and the new 4-digit format of course numbers.
 updated_clean_data <- updated_clean_data |> 
-  mutate(crs_level = case_when(str_detect(crs_no, "^1.*") ~ "1XX",
-                              str_detect(crs_no, "^2.*") ~ "2XX",
-                              str_detect(crs_no, "^3.*")~ "3XX", 
-                              str_detect(crs_no, "^4.*") ~ "4XX", 
-                              str_detect(crs_no, "^5.*") ~ "5XX", 
-                              str_detect(crs_no, "^6.*") ~ "6XX"
+  mutate(crs_level = case_when(str_detect(crs_no, "^1.*") ~ "1XXX",
+                              str_detect(crs_no, "^2.*") ~ "2XXX",
+                              str_detect(crs_no, "^3.*")~ "3XXX", 
+                              str_detect(crs_no, "^4.*") ~ "4XXX", 
+                              str_detect(crs_no, "^5.*") ~ "5XXX", 
+                              str_detect(crs_no, "^6.*") ~ "6XXX"
                             )
                           )
 
