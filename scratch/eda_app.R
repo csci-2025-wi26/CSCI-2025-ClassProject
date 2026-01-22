@@ -1,6 +1,9 @@
 library(tidyverse)
 library(dplyr)
 
+library(tidyverse)
+library(dplyr)
+
 raw_data <- vroom::vroom("C:\\Users\\logan\\CSCI-2025-ClassProject\\data\\raw\\registrar_data.csv")
 
 #adding dfw column
@@ -26,39 +29,92 @@ updated_clean_data <- clean_data |>
     xstc_verified_lettr_grade == "D" ~ 1.00,
     xstc_verified_lettr_grade == "D-" ~ 0.70,
     xstc_verified_lettr_grade == "F" ~ 0.00 
-  ))
+  )) 
 
-# Shiny stuff
+#turn all the AU grades in letter grades column into NA's so they can be handled.
+updated_clean_data <- updated_clean_data |> 
+  mutate(xstc_verified_lettr_grade = na_if(xstc_verified_lettr_grade, "AU")) 
+
+#this makes upper and lower division column. tested, includes no NA's. assumes that '1's are '100'
+updated_clean_data <- updated_clean_data |> 
+  mutate(upper_lower_div = case_when(str_detect(crs_no, "^1.*") | str_detect(crs_no, "^2.*") ~ "lower",
+        str_detect(crs_no, "^3.*") | str_detect(crs_no, "^4.*") | str_detect(crs_no, "5.*") | str_detect(crs_no, "6.*") ~ "upper") 
+  ) 
+
+#make a column that specifies the course level so that users can eventually be able to filter/select by course level. Assumed 3-digit format still. Tested and confirmed no NA's in this column.
+updated_clean_data <- updated_clean_data |> 
+  mutate(crs_level = case_when(str_detect(crs_no, "^1.*") ~ "1XX",
+                              str_detect(crs_no, "^2.*") ~ "2XX",
+                              str_detect(crs_no, "^3.*")~ "3XX", 
+                              str_detect(crs_no, "^4.*") ~ "4XX", 
+                              str_detect(crs_no, "^5.*") ~ "5XX", 
+                              str_detect(crs_no, "^6.*") ~ "6XX"
+                            )
+                          )
+
+
+#strip the commas from the students_stu_class
+updated_clean_data <- updated_clean_data |> 
+  mutate(students_stu_class = str_remove_all(students_stu_class, ","))
+
+#remove numbers and extra whitespace from re
+updated_clean_data <- updated_clean_data |> 
+  mutate(re = str_replace(re, "[^a-zA-Z]{2,}", ""))
+
+
+
+
+#choosing to leave upper_lower_div and crs_level as strings for now.
+#glimpse(updated_clean_data)
+
+
+
+
+#write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
+
+
+# Run this command to bring the dataframe into your script:
+# cleaned_data <- read_csv("data/processed/cleaned_data.csv")
+
+
+
+# _____Shiny stuff_____
+
+# source('en_global.R')
+
+# main page with a title that has C of I branding
+# left side panel page that has 'Home', 'Enrollment', 'Retention', 
+# 'Outcomes', 'Performance'
+# mini tabs with each group (plot per tab)
+# download button for each plot
+# filters across groups: department (selectInput), class standing (selectInput)
+# add prefixes for variables (like 'pe_' for performance)
+# inputs above plots
+
 library(shiny)
 library(bslib)
 
 ui <- fluidPage(
-  navlistPanel(
-    "Academic Performance",
-    tabPanel("Q1", value = "Q1",
-      selectInput("opt1", "DFW Rate or GPA?",
-        choices = c("DFW Rate", "GPA")),
-      selectInput("opt2", "Barplot, Boxplot, or Violinplot?",
-        choices = c("Barplot", "Boxplot", "Violinplot")),
-      radioButtons("opt3", "Select Demographics.",
-        choices = c("Gender", "Race", "SES")),
-      plotOutput("plotq1")
-    ),
-    tabPanel("Q2", value = "Q2",
-      plotOutput("plotq2")
-    ),
-    tabPanel("Q3", value = "Q3",
-      plotOutput("plotq3"),
-      radioButtons("opt3", "Select Demographics.",
-        choices = c("Gender", "Race", "SES"))
-    ),
-  widths = c(2, 10))
+  tabsetPanel(
+    tabPanel("Q1",
+      fluidRow(
+        column(12,
+          selectInput("opt1", "DFW or GPA?", choices = c("DFW", "GPA"))
+        )
+      ),
+      fluidRow(
+        column(12,
+          tableOutput("plotq1")
+        )
+      )
+    )
+  )
 )
 
 server <- function(input, output, session) {
-  output$plotq1 <- renderPlot({
-    ggplot(data.frame(x = c(1:5), y = c(6:10)), aes(x = x, y = y)) +
-      geom_point()
+
+  output$plotq1 <- renderTable({
+    head(raw_data)
   })
   
   output$plotq2 <- renderPlot({
