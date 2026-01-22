@@ -90,13 +90,17 @@ cleaned_data <- cleaned_data |>
     status = case_when(
       !is.na(person_xper_grad_term) ~ "Graduated",
       term_year == max(cleaned_data$term_year) ~ "Currently Enrolled",
-      !ever_graduated & !has_next_year ~ "Dropped",
-      TRUE ~ "Stayed"
+      !ever_graduated & !has_next_year ~ "Dropped"
     )
   ) |>
   ungroup()
 
-glimpse(cleaned_data)
+cleaned_data <- cleaned_data |>
+  group_by(stc_person) |>
+  mutate(classes_taken = n())
+
+cleaned_data |>
+  select(classes_taken)
 
 write_csv(
   cleaned_data,
