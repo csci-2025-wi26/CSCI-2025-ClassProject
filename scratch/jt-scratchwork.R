@@ -6,10 +6,12 @@ glimpse(cleaned_data)
 
 
 cleaned_data |> 
-  mutate(re = str_replace(re, "[^a-zA-Z]{2,}", "")) |> 
-  count(re)
+  filter(str_detect(stc_depts, ",")|str_detect(stc_depts, " ")) |> 
+  count(stc_depts)
 
-
+cleaned_data |> 
+  select(stc_course_name, crs_no, student_course_sec_stc_title, crs_level, upper_lower_div) |>
+  filter(crs_no == "1")
 
 
 
