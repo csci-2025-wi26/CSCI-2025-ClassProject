@@ -51,10 +51,15 @@ mean_scores <- gradeAverageDepartment |>
     axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
     legend.text  = element_text(size = 12),
     legend.title  = element_text(size = 15),
-    legend.position = "top"
+    legend.position = "top",
+    title = element_text(size = 18, family = "Proxima Nova")
   ) +
   labs(fill = "Grade",
-    x = "Departments",
-    y = "Mean Score")
+    x = "Department",
+    y = "Mean Score",
+    title = "Mean Grade Score by Department",
+    )
 
-ggsave("charts/mean_scores.png", plot = mean_scores, width = 12, height = 6)
+mean_scores
+
+ggsave("plots/mean_scores.png", plot = mean_scores, width = 12, height = 6)
