@@ -1,24 +1,21 @@
 library(tidyverse)
+library(dplyr)
 
 registrar_data <- read_csv('data/raw/registrar_data.csv')
 
 clean_data <- registrar_data |>
-  separate(stc_depts, into = c('first_major', 'second_major'), sep=',')
+  group_by(stc_person, term_reporting_year) |>
+  summarise(
+    major = first(stc_depts),
+    .groups = "drop"
+  )
 
 glimpse(clean_data)
 
-clean_data |>
-  select(students_xstu_grad_app_major) |>
-  print(n = 50)
 
-glimpse(clean_data19)
-#twenty_enrollment <- registrar_data |>
-#  filter(term_reporting_year == "2020")
+#clean_data <- registrar_data |>
+#  separate(stc_depts, into = c('first_major', 'second_major'), sep=',')
 
-#twentyone_enrollment <- registrar_data |>
-#  filter(term_reporting_year == "2021")
-
-#twentytwo_enrollment <- registrar_data |>
-#  filter(term_reporting_year == "2022")
+#glimpse(clean_data)
 
 
