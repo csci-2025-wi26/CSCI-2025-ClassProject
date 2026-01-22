@@ -5,10 +5,8 @@ registrar_data <- read_csv('data/raw/registrar_data.csv')
 
 clean_data <- registrar_data |>
   group_by(stc_person, term_reporting_year) |>
-  summarise(
-    major = first(stc_depts),
-    .groups = "drop"
-  )
+  mutate(major = first(stc_depts)) |>
+  ungroup()
 
 glimpse(clean_data)
 
