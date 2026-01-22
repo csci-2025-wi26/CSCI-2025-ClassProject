@@ -1,33 +1,119 @@
 ---
-title: "Enrollment Trends & Insights: Proposal"
-subtitle: "Enrollment Branch"
+title: "Enrollment Trends & Insights: Proposals"
+subtitle: "College of Idaho Enrollment Visualization Project"
+author: "Team Sentinel"
 format: revealjs
 theme: simple
 transition: fade
-
 ---
 
-## Question
+## Project Motivation
 
-How has student enrollment for a selected major changed over time from 2019 to 2024, and how is enrollment distributed across racial groups each year?
+College administrators and stakeholders need to understand enrollment trends quickly and accurately.
 
----
+While visualizations show patterns, they often require interpretation to answer: - What changed? - Why does it matter? - What should we notice first?
 
-## Planned Visualization
+Our project combines **interactive enrollment visualizations** with an **automated narrative system** that explains the data clearly and responsibly.
 
-We plan to include the following visualization:
+------------------------------------------------------------------------
 
-Bar chart showing total student enrollment per year for the selected major, with bars colored by race.
+## Project Goal
 
----
+Our goal is to build an interactive dashboard that: - Visualizes College of Idaho enrollment data - Highlights trends, composition, and changes over time - Automatically generates plain-language explanations for each chart
 
-## Next steps
+This ensures the data is **accessible**, **interpretable**, and **actionable**.
 
-1. Clean data for analysis.
-2. Create visualizations in Shiny.
+------------------------------------------------------------------------
 
+## Key Questions We Will Answer
 
+-   How has total enrollment changed over time?
+-   What portions of enrollment are first-year vs continuing students?
+-   Where are students coming from geographically?
+-   Which academic programs are growing or shrinking?
+-   What are the most important takeaways from each visualization?
 
----
+------------------------------------------------------------------------
 
-## Thank you
+## Planned Visualizations
+
+We plan to include the following visualizations:
+
+-   Line chart: Total enrollment by year
+-   Stacked bar chart: Enrollment by class standing
+-   Bar chart: In-state vs out-of-state enrollment
+-   Bar chart: Enrollment by major or division
+-   Change-focused charts highlighting growth or decline
+
+Each visualization will be paired with automated narrative text.
+
+------------------------------------------------------------------------
+
+## The Narrator Feature (Context Generator)
+
+To help users interpret charts, our dashboard will include a **Narrator module** that:
+
+-   Automatically summarizes what each chart shows
+-   Uses a “Mad Libs” style text template
+-   Adapts language based on the data (increase, decrease, stable)
+-   Flags uncertainty or missing data when relevant
+
+Example: \> “Total enrollment increased by 4.2% from Fall 2024 to Fall 2025, driven primarily by first-year students.”
+
+------------------------------------------------------------------------
+
+## How the Narrator Works (Conceptual)
+
+For each visualization, the Narrator will: 1. Extract key summary statistics 2. Determine trends and direction of change 3. Select an appropriate text template 4. Generate a concise, readable explanation
+
+This approach ensures consistency across the dashboard and reduces misinterpretation.
+
+------------------------------------------------------------------------
+
+## Quality Assurance & Data Responsibility
+
+The Narrator also serves as a built-in Quality Assurance layer by: - Avoiding misleading claims when data is incomplete - Handling missing values and small sample sizes - Ensuring consistent rounding and terminology - Adding notes when interpretation should be cautious
+
+This helps maintain accuracy and trust in the dashboard.
+
+------------------------------------------------------------------------
+
+## Tools & Technologies
+
+-   R and tidyverse for data manipulation
+-   ggplot2 for visualization
+-   stringr and glue for narrative generation
+-   Quarto for presentation and documentation
+-   GitHub for version control and collaboration
+
+------------------------------------------------------------------------
+
+## Project Timeline
+
+-   Data exploration and cleaning
+-   Visualization development
+-   Narrative template design
+-   QA testing and validation
+-   Final dashboard integration and presentation
+
+Each component will be developed in parallel and integrated incrementally.
+
+------------------------------------------------------------------------
+
+## Expected Outcome
+
+By the end of the project, we will deliver: - A polished set of enrollment visualizations - Automated narrative explanations for each chart - A dashboard that communicates insights clearly to all users
+
+This project demonstrates both technical and interpretive data skills.
+
+------------------------------------------------------------------------
+
+## Next Steps
+
+-   Finalize enrollment dataset structure
+-   Assign visualization ownership
+-   Begin narrator template implementation
+-   Conduct early QA testing
+-   Merge features into final dashboard
+
+Thank you!
