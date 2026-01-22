@@ -34,7 +34,7 @@ updated_clean_data <- updated_clean_data |>
 
 #this makes upper and lower division column. tested, includes no NA's. assumes that '1's are '100'
 updated_clean_data <- updated_clean_data |> 
-  mutate(division = case_when(str_detect(crs_no, "^1.*") | str_detect(crs_no, "^2.*") ~ "lower",
+  mutate(upper_lower_div = case_when(str_detect(crs_no, "^1.*") | str_detect(crs_no, "^2.*") ~ "lower",
         str_detect(crs_no, "^3.*") | str_detect(crs_no, "^4.*") | str_detect(crs_no, "5.*") | str_detect(crs_no, "6.*") ~ "upper") 
   ) |> 
   glimpse()
