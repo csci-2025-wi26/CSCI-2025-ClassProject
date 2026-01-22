@@ -32,6 +32,16 @@ updated_clean_data <- clean_data |>
 updated_clean_data <- updated_clean_data |> 
   mutate(xstc_verified_lettr_grade = na_if(xstc_verified_lettr_grade, "AU")) 
 
+#this makes upper and lower division column. tested, includes no NA's. assumes that '1's are '100'
+updated_clean_data <- updated_clean_data |> 
+  mutate(division = case_when(str_detect(crs_no, "^1.*") | str_detect(crs_no, "^2.*") ~ "lower",
+        str_detect(crs_no, "^3.*") | str_detect(crs_no, "^4.*") | str_detect(crs_no, "5.*") | str_detect(crs_no, "6.*") ~ "upper") 
+  ) |> 
+  glimpse()
+
+
+
+
 write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
 
 
