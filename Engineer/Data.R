@@ -1,20 +1,14 @@
 library(tidyverse)
 library(dplyr)
 
-registrar_data <- read_csv('data/raw/registrar_data.csv')
+enrollment_registrar_data <- read_csv('data/raw/registrar_data.csv')
 
-clean_data <- registrar_data |>
-  separate_longer_delim(stc_depts, delim = ',') |>
-  mutate(stc_depts = trimws(stc_depts)) |>
+enrollment_clean_data <- enrollment_registrar_data |>
+  separate_longer_delim(students_stu_majors , delim = ',') |>
+  mutate(students_stu_majors  = trimws(students_stu_majors )) |>
   group_by(stc_person, term_reporting_year) |>
-  mutate(major = first(stc_depts))
+  mutate(major = first(students_stu_majors))
 
-glimpse(clean_data)
-
-
-#clean_data <- registrar_data |>
-#  separate(stc_depts, into = c('first_major', 'second_major'), sep=',')
-
-#glimpse(clean_data)
+glimpse(enrollment_clean_data)
 
 
