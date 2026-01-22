@@ -95,21 +95,17 @@ cleaned_data <- cleaned_data |>
   ) |>
   ungroup()
 
-<<<<<<< HEAD
 cleaned_data <- cleaned_data |>
   group_by(stc_person) |>
   mutate(classes_taken = n())
 
-cleaned_data |>
-  select(classes_taken)
-=======
+
 cleaned_data <- cleaned_data |> #col to look at major switching
   group_by(stc_person) |>
 
   ungroup()
 
 glimpse(cleaned_data)
->>>>>>> c176389c18fdb4162b1b642b1b61dd1122fc8c98
 
 write_csv(
   cleaned_data,
