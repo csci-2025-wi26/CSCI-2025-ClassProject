@@ -1,7 +1,7 @@
 library(tidyverse)
 library(dplyr)
 
-raw_data <- vroom::vroom("C:\\Users\\logan\\CSCI-2025-ClassProject\\data\\raw\\registrar_data.csv")
+raw_data <- vroom::vroom("data/raw/registrar_data.csv")
 
 #adding dfw column
 clean_data <- raw_data |> 
