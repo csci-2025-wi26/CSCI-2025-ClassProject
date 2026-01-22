@@ -49,6 +49,12 @@ updated_clean_data <- updated_clean_data |>
                             )
                           )
 
+
+#strip the commas from the students_stu_class
+updated_clean_data <- updated_clean_data |> 
+  mutate(students_stu_class = str_remove_all(students_stu_class, ","))
+
+
 #choosing to leave upper_lower_div and crs_level as strings for now.
 glimpse(updated_clean_data)
 
