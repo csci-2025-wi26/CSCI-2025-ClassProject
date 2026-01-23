@@ -73,10 +73,11 @@ glimpse(updated_clean_data)
 
 
 
-
 write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
 
 
 # Run this command to bring the dataframe into your script:
 # cleaned_data <- read_csv("data/processed/cleaned_data.csv")
+
+
 
