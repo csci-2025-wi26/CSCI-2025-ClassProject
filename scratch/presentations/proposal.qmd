@@ -6,7 +6,8 @@ format: html
 
 # Goals 
 
-Do students graduate in their department? 
+Do students graduate in their department?
+
 Why do they leave?
 
 Identify after what courses student's changing their major or dropping out?
@@ -14,7 +15,13 @@ Identify after what courses student's changing their major or dropping out?
 After what year is a student likely to change their department?
 
 If one's grades are lower, are they more likely to take less classes in that field?
-    See how many classes students take in a field when they have an F
+
+See how many classes students take in a field when they have an F.
+
+
+RETENTION RATE OF ALL MAJORS
+
+LIKELINESS OF INTRO. COURSES TO RETAIN STUDENTS.
 
 
 # Charts
