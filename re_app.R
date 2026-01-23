@@ -1,7 +1,7 @@
 library(shiny)
 library(ggplot2)
 
-# Load processing logic
+
 source("re_global.R")
 
 ui <- fluidPage(
@@ -19,7 +19,7 @@ server <- function(input, output) {
     ggplot(retention_data, aes(x = reorder(starting_major, retention_rate), y = retention_rate)) +
       geom_bar(stat = "identity", fill = "#533860") + # Brand Single-Series Color
       coord_flip() +
-      theme_minimal() + # Requested Theme
+      theme_minimal() + 
       labs(
         title = "Nova Proxima: Major Retention Rates",
         subtitle = "Percentage of students who remain in their first declared major",

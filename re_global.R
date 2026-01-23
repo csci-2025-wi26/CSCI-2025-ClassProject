@@ -1,9 +1,7 @@
 library(tidyverse)
 library(stringr)
 
-
 raw_data <- read_csv("data/raw/registrar_data.csv")
-
 
 major_map <- c(
   "Psychology" = "Psych.",
@@ -20,21 +18,17 @@ major_map <- c(
   "Sociology" = "Soc."
 )
 
-
 process_journey <- function(major_string) {
   if (is.na(major_string)) return(NULL)
   
-
   parts <- str_split(major_string, ",")[[1]] %>% str_trim()
   
-
-  while(length(parts) > 0 && parts[1] %in% c("OPEN", "NON", "NONGR")) {
-    parts <- parts[-1]
-  }
+  parts <- rev(parts)
+  
+  parts <- parts[!parts %in% c("OPEN", "NON", "NONGR")]
   
   if (length(parts) == 0) return(NULL)
   
-
   cleaned <- parts[1]
   if (length(parts) > 1) {
     for (i in 2:length(parts)) {
@@ -45,7 +39,6 @@ process_journey <- function(major_string) {
   }
   return(cleaned)
 }
-
 
 retention_data <- raw_data %>%
   group_by(stc_person) %>%
@@ -67,7 +60,5 @@ retention_data <- raw_data %>%
   mutate(
     retention_rate = (1 - (shifters / total_students)) * 100
   ) %>%
-
   filter(total_students >= 5) %>%
   arrange(desc(retention_rate))
-
