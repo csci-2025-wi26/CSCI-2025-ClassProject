@@ -96,7 +96,8 @@ ui <- fluidPage(
     tabPanel("Q1",
       fluidRow(
         column(12,
-          selectInput("opt1", "DFW or GPA?", choices = c("DFW", "GPA"))
+          selectInput("opt1", "DFW or GPA?", choices = c("dfw", "grade_numeric")),
+          radioButtons("opt2", "Select Demographic", choices = c("person_gender", "re", "pell"))
         )
       ),
       fluidRow(
@@ -131,18 +132,11 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
-  x_val <- reactive(case_when(
-    input$opt1 == "DFW" ~ updated_clean_data$dfw,
-    input$opt1 == "GPA" ~ updated_clean_data$grade_numeric
-  ))
-  
-#  df <- reactive(
-#    updated_clean_data |>
-#      select(students_stu_class)
-#  )
 
-  output$plotq1 <- renderTable({
-    updated_clean_data
+  output$plotq1 <- renderPlot({
+    ggplot(updated_clean_data, aes(x = students_stu_class, y = .data[[input$opt1]],
+      fill = .data[[input$opt2]])) + 
+      geom_col(stat = "identity")
   })
   
   output$plotq2 <- renderPlot({
