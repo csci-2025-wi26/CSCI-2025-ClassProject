@@ -61,19 +61,19 @@ updated_clean_data <- updated_clean_data |>
 
 #some expected graduation years in xstu_grad_acad_year contain two values. 
 #in order to not lose information we will keep these values, but add a comma for clarity.
+#also switch to character instead of dbl since this is more of a category.
 updated_clean_data <- updated_clean_data |> 
+  mutate(students_xstu_grad_acad_year = as.character(students_xstu_grad_acad_year)) |> 
   mutate(
     students_xstu_grad_acad_year = str_replace(students_xstu_grad_acad_year, "^(\\d{4})(\\d+)", "\\1,\\2")
   )
 
 
 
-#choosing to leave upper_lower_div and crs_level as strings for now.
-glimpse(updated_clean_data)
-
 
 
 write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
+
 
 
 # Run this command to bring the dataframe into your script:
