@@ -35,27 +35,6 @@ gradeAverageDepartment <- cleaned_data |>
 
 print(gradeAverageDepartment, n = 26)
 
-mean_scores <- gradeAverageDepartment |>
-  ggplot(aes(x = reorder(stc_depts, mean_department), y = mean_department, fill = mean_department >= 3.30)) +
-  geom_col() +
-  coord_cartesian(ylim = c(3, NA)) +
-  scale_fill_manual(
-    values = c("FALSE" = "#533860", "TRUE" = "#228B22"),
-    labels = c("Below B+", "B+ or higher")
-  ) +
-  theme_minimal() +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
-    legend.text  = element_text(size = 12),
-    legend.title  = element_text(size = 15),
-    legend.position = "top",
-    title = element_text(size = 18, family = "Proxima Nova")
-  ) +
-  labs(fill = "Grade",
-    x = "Department",
-    y = "Mean Score",
-    title = "Mean Grade Score by Department",
-    )
 
 ##############-----------END OF STUFF FROM CHARTS----------########
 
