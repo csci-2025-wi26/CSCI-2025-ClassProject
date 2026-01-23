@@ -15,6 +15,6 @@ outcome: switched majors? is that related to performance?
 columns we need:
 - dfw # t/f or d/f/w/p 
 - grad_year
-- class_standing
+- class_standing # used to impute 
 - grad_time # how many years to graduation?
-- did go on to graduate school here?
+- did go on to graduate school here? # cut, leave for retention
