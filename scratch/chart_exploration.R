@@ -62,3 +62,30 @@ by_gender <- graduation_data |>
 
 ggplot(by_gender, aes(race_ethnicity, prop_grad)) +
   geom_col()
+
+
+student_year_summary <- cleaned_data %>%
+  mutate(dept = str_extract(primary_major, "^[^,]+")) %>%
+  group_by(stc_person, term_year) %>%
+  summarise(
+    dept = first(dept),
+    graduated = any(!is.na(person_xper_grad_term)),
+    .groups = "drop"
+  )
+student_year_summary
+
+
+target_dept <- "PSY" 
+analysis_data %>%
+  filter(dept == target_dept) %>%
+  ggplot(aes(x = as.factor(term_year), fill = status)) +
+  geom_bar(position = "fill") +
+  labs(
+    title = paste("Student Status for Department:", target_dept),
+    subtitle = "Comparing retention and dropout rates by academic year",
+    x = "Academic Year",
+    y = "Number of Students",
+    fill = "Status"
+  ) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set2")

@@ -68,6 +68,45 @@ cleaned_data <- cleaned_data |>
     }
   )
 
+cleaned_data <- cleaned_data |>
+  mutate(
+    refined_gender = case_when(
+      person_gender_identity == "TRANSGEN" ~ "Transgender",
+      TRUE ~ gender
+    )
+  ) |>
+  group_by(stc_person) |>
+  mutate(
+    start_term_index = min(term_index, na.rm = TRUE),
+    ever_graduated = any(!is.na(person_xper_grad_term)),
+    years_to_grad = if_else(
+      !is.na(person_xper_grad_term),
+      term_index - start_term_index,
+      NA_real_
+    )
+  ) |>
+  mutate(
+    has_next_year = any(term_year == (term_year + 1)),
+    status = case_when(
+      !is.na(person_xper_grad_term) ~ "Graduated",
+      term_year == max(cleaned_data$term_year) ~ "Currently Enrolled",
+      !ever_graduated & !has_next_year ~ "Dropped"
+    )
+  ) |>
+  ungroup()
+
+cleaned_data <- cleaned_data |>
+  group_by(stc_person) |>
+  mutate(classes_taken = n())
+
+
+cleaned_data <- cleaned_data |> #col to look at major switching
+  group_by(stc_person) |>
+
+  ungroup()
+
+glimpse(cleaned_data)
+
 write_csv(
   cleaned_data,
   "data/clean/registrar_cleaned.csv"
