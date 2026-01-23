@@ -47,11 +47,16 @@ retention_data <- raw_data %>%
   ungroup() %>%
   mutate(journey = map(students_stu_majors, process_journey)) %>%
   filter(!map_lgl(journey, is.null)) %>%
-  mutate(
-    starting_major = map_chr(journey, ~ .x[1]),
-    did_shift = map_lgl(journey, ~ length(.x) > 1)
-  ) %>%
-  group_by(starting_major) %>%
+  mutate(transitions = map(journey, ~ {
+    n <- length(.x)
+    tibble(
+      major = .x,
+      did_shift = c(rep(TRUE, n - 1), FALSE)
+    )
+  })) %>%
+  select(stc_person, transitions) %>%
+  unnest(transitions) %>%
+  group_by(major) %>%
   summarise(
     total_students = n(),
     shifters = sum(did_shift),
