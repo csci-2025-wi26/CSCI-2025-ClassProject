@@ -59,6 +59,12 @@ updated_clean_data <- updated_clean_data |>
 updated_clean_data <- updated_clean_data |> 
   mutate(re = str_replace(re, "[^a-zA-Z]{2,}", ""))
 
+#some expected graduation years in xstu_grad_acad_year contain two values. 
+#in order to not lose information we will keep these values, but add a comma for clarity.
+updated_clean_data <- updated_clean_data |> 
+  mutate(
+    students_xstu_grad_acad_year = str_replace(students_xstu_grad_acad_year, "^(\\d{4})(\\d+)", "\\1,\\2")
+  )
 
 
 

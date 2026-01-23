@@ -5,8 +5,28 @@ cleaned_data <- read_csv("data/processed/cleaned_data.csv")
 glimpse(cleaned_data)
 
 cleaned_data |> 
-  filter(str_detect(stc_course_name, "^[A-Za-z]{3}-\d{3}$")) |> 
+  select(majors_maj_desc, students_stu_active_majors) |> 
+  filter(is.na(students_stu_active_majors)) |> 
   glimpse()
+
+cleaned_data |> 
+  count(minors_minors_desc)
+
+cleaned_data |> 
+  count(students_xstu_grad_acad_year) |> 
+  print(n=27)
+
+cleaned_data |> 
+  mutate(
+    students_xstu_grad_acad_year = str_replace(students_xstu_grad_acad_year, "^(\\d{4})(\\d+)", "\\1,\\2")
+  ) |> 
+  count(students_xstu_grad_acad_year) |>  print(n=27)
+
+
+  # arrange(n) |> 
+  # filter(!str_detect(students_stu_active_majors, "^.{3,}$") & !str_detect(students_stu_active_majors, ",")) |> 
+  # glimpse()
+
 
 # cleaned_data |> 
 #   filter(str_detect(stc_depts, ",")|str_detect(stc_depts, " ")) |> 
