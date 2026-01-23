@@ -8,7 +8,14 @@ library(dplyr)
 
 #See full cleaning script in creating-dfw-and-numeric.R
 # Run this command to bring the dataframe into your script:
-cleaned_data <- read_csv("data/processed/cleaned_data.csv")
+ cleaned_data <- read_csv("data/processed/cleaned_data.csv", 
+                       col_types = cols(
+                              students_xstu_grad_acad_year = col_character(), 
+                              term_numeric = col_character(),
+                              stc_person = col_character(),
+                              term_reporting_year = col_character()
+                        )
+                  )
 
 
 
