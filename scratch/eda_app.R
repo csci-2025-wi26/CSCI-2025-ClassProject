@@ -97,12 +97,13 @@ ui <- fluidPage(
       fluidRow(
         column(12,
           selectInput("opt1", "DFW or GPA?", choices = c("dfw", "grade_numeric")),
+          selectInput("opt3", "Choose graph", choices = c("Histogram", "Boxplot", "Jitterplot")),
           radioButtons("opt2", "Select Demographic", choices = c("person_gender", "re", "pell"))
         )
       ),
       fluidRow(
         column(12,
-          tableOutput("plotq1")
+          plotOutput("plotq1")
         )
       )
     ),
@@ -132,12 +133,19 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  plot_geom <- reactive({
+    switch(input$opt3,
+    Boxplot = geom_boxplot(),
+    Jitterplot = geom_jitter(),
+    Histogram = geom_col()
+    )
+  })
 
   output$plotq1 <- renderPlot({
     ggplot(updated_clean_data, aes(x = students_stu_class, y = .data[[input$opt1]],
       fill = .data[[input$opt2]])) + 
-      geom_col(stat = "identity")
-  })
+      plot_geom()
+  }, res = 96)
   
   output$plotq2 <- renderPlot({
     ggplot(data.frame(x = c(10:6), y = c(6:10)), aes(x = x, y = y)) +
