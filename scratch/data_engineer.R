@@ -36,3 +36,52 @@ major_path <- data_raw |>
 
 
 
+
+
+enroll <- data_raw |>
+  select(stc_person, stc_course_name, student_course_sec_stc_title, term_numeric) |>
+  rename(
+    student_id = stc_person,
+    course_code = stc_course_name,
+    course_title = student_course_sec_stc_title,
+    term = term_numeric
+  ) |>
+  mutate(
+    course_code  = str_to_upper(str_squish(as.character(course_code))),
+    course_title = str_squish(as.character(course_title)),
+    department   = str_extract(course_code, "^[A-Z]+")
+  ) |>
+  filter(!is.na(student_id), !is.na(term), !is.na(course_code), !is.na(department), !is.na(course_title)) |>
+  distinct(student_id, department, term, course_code, course_title)
+
+
+intro <- enroll |>
+  filter(str_detect(str_to_lower(course_title), "intro|introduc"))
+
+
+intro_with_continue <- intro |>
+  left_join(enroll, by = c("student_id", "department"), suffix = c("_intro", "_any")) |>
+  group_by(student_id, department, course_code_intro, course_title_intro, term_intro) |>
+  summarise(
+    continued = any(term_any > term_intro),
+    .groups = "drop"
+  )
+
+
+intro_course_retention <- intro_with_continue |>
+  group_by(department,
+           intro_course_code = course_code_intro,
+           intro_course_title = course_title_intro) |>
+  summarise(
+    n_students = n_distinct(student_id),
+    n_continue = sum(continued),
+    retention_rate = n_continue / n_students,
+    .groups = "drop"
+  ) |>
+  filter(n_students >= 5) |>
+  arrange(desc(retention_rate))
+
+
+
+
+
