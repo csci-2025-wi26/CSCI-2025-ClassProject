@@ -21,7 +21,7 @@ major_map <- c(
 process_journey <- function(major_string) {
   if (is.na(major_string)) return(NULL)
   
-  parts <- str_split(major_string, ",")[[1]] %>% str_trim()
+  parts <- str_split(major_string, ",")[[1]] |> str_trim()
   
   parts <- rev(parts)
   
@@ -40,30 +40,30 @@ process_journey <- function(major_string) {
   return(cleaned)
 }
 
-retention_data <- raw_data %>%
-  group_by(stc_person) %>%
-  filter(term_numeric == max(term_numeric)) %>%
-  slice(1) %>%
-  ungroup() %>%
-  mutate(journey = map(students_stu_majors, process_journey)) %>%
-  filter(!map_lgl(journey, is.null)) %>%
+retention_data <- raw_data |>
+  group_by(stc_person) |>
+  filter(term_numeric == max(term_numeric)) |>
+  slice(1) |>
+  ungroup() |>
+  mutate(journey = map(students_stu_majors, process_journey)) |>
+  filter(!map_lgl(journey, is.null)) |>
   mutate(transitions = map(journey, ~ {
     n <- length(.x)
     tibble(
       major = .x,
       did_shift = c(rep(TRUE, n - 1), FALSE)
     )
-  })) %>%
-  select(stc_person, transitions) %>%
-  unnest(transitions) %>%
-  group_by(major) %>%
+  })) |>
+  select(stc_person, transitions) |>
+  unnest(transitions) |>
+  group_by(major) |>
   summarise(
     total_students = n(),
     shifters = sum(did_shift),
     .groups = 'drop'
-  ) %>%
+  ) |>
   mutate(
     retention_rate = (1 - (shifters / total_students)) * 100
-  ) %>%
-  filter(total_students >= 5) %>%
+  ) |>
+  filter(total_students >= 5) |>
   arrange(desc(retention_rate))

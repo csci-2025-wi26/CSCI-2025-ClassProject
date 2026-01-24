@@ -20,7 +20,7 @@ server <- function(input, output) {
       coord_flip() +
       theme_minimal() + 
       labs(
-        title = "Nova Proxima: Major Retention Rates",
+        title = "Major Retention Rates",
         subtitle = "Percentage of students who remain in their declared major",
         x = "Major", 
         y = "Retention rate (%)",
