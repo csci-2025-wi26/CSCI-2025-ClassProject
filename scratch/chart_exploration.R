@@ -114,3 +114,24 @@ student_year_summary %>%
     plot.title = element_text(family = "Proxima Nova"),
     text = element_text(family = "Roboto Slab")
   )
+
+#idea for making new column for years it took to graduate
+#didn't work due to data not spanning far back enough but could have worked with more time
+"
+graduation_year_data <- graduation_data |>
+  group_by(stc_person) |>
+  summarize(
+    grad_year = first(grad_year), 
+    start_year = min(term_index, na.rm = TRUE),
+    years_to_grad = grad_year - start_year
+  ) |>
+  ungroup()
+glimpse(graduation_year_data)
+
+graduation_year_plot_data <- graduation_data |>
+  left_join(graduation_year_data, by = "'stc_person'")
+
+graduation_year_plot_data |>
+  ggplot(aes(x=years_to_grad, fill = pell_recipient)) +
+  geom_bar()
+"
