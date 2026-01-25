@@ -2,38 +2,31 @@ library(tidyverse)
 library(stringr)
 
 raw_data <- read_csv("data/raw/registrar_data.csv")
+mapping_raw <- read_csv("data/raw/major-department_correlation.csv")
 
-major_map <- c(
-  "Psychology" = "Psych.",
-  "Biology" = "Bio.",
-  "Computer Science" = "Comp. Sci.",
-  "Exercise Science" = "Ex. Sci.",
-  "Business Administration" = "Bus. Admin.",
-  "Mathematics" = "Math.",
-  "Accounting" = "Acct.",
-  "Education" = "Ed.",
-  "Environmental Studies" = "Env. Studies",
-  "History" = "Hist.",
-  "Anthropology" = "Anthro.",
-  "Sociology" = "Soc."
-)
+major_to_dept_lookup <- mapping_raw |>
+  separate_rows(Code, sep = "/") |>
+  mutate(Code = str_trim(Code)) |>
+  select(Code, Department) |>
+  deframe()
+
+# DEPARTMENT RETENTION DATA
 
 process_journey <- function(major_string) {
   if (is.na(major_string)) return(NULL)
-  
   parts <- str_split(major_string, ",")[[1]] |> str_trim()
-  
   parts <- rev(parts)
-  
   parts <- parts[!parts %in% c("OPEN", "NON", "NONGR")]
-  
   if (length(parts) == 0) return(NULL)
-  
-  cleaned <- parts[1]
-  if (length(parts) > 1) {
-    for (i in 2:length(parts)) {
-      if (parts[i] != parts[i-1]) {
-        cleaned <- c(cleaned, parts[i])
+  dept_parts <- map_chr(parts, ~ {
+    dept <- major_to_dept_lookup[.x]
+    if (is.na(dept)) return(.x) else return(dept)
+  })
+  cleaned <- dept_parts[1]
+  if (length(dept_parts) > 1) {
+    for (i in 2:length(dept_parts)) {
+      if (dept_parts[i] != dept_parts[i-1]) {
+        cleaned <- c(cleaned, dept_parts[i])
       }
     }
   }
@@ -49,21 +42,47 @@ retention_data <- raw_data |>
   filter(!map_lgl(journey, is.null)) |>
   mutate(transitions = map(journey, ~ {
     n <- length(.x)
-    tibble(
-      major = .x,
-      did_shift = c(rep(TRUE, n - 1), FALSE)
-    )
+    tibble(dept = .x, did_shift = c(rep(TRUE, n - 1), FALSE))
   })) |>
   select(stc_person, transitions) |>
   unnest(transitions) |>
-  group_by(major) |>
-  summarise(
-    total_students = n(),
-    shifters = sum(did_shift),
-    .groups = 'drop'
-  ) |>
-  mutate(
-    retention_rate = (1 - (shifters / total_students)) * 100
-  ) |>
+  group_by(dept) |>
+  summarise(total_students = n(), shifters = sum(did_shift), .groups = 'drop') |>
+  mutate(retention_rate = (1 - (shifters / total_students)) * 100) |>
   filter(total_students >= 5) |>
+  arrange(desc(retention_rate))
+
+# INTRO COURSE RETENTION DATA  ---
+
+enroll <- raw_data |>
+  select(stc_person, stc_course_name, student_course_sec_stc_title, term_numeric) |>
+  rename(student_id = stc_person, course_code = stc_course_name, course_title = student_course_sec_stc_title, term = term_numeric) |>
+  mutate(
+    course_code  = str_to_upper(str_squish(as.character(course_code))),
+    course_title = str_squish(as.character(course_title)),
+    department   = str_extract(course_code, "^[A-Z]+"),
+    # I add this to Fynn's code to be able to look for 100 level classes. Not all intro classes cointain intro (or related) in their names.
+    course_num   = as.numeric(str_extract(course_code, "\\d+"))
+  ) |>
+  filter(!is.na(student_id), !is.na(term), !is.na(course_code))
+
+# Keywords OR 100-level
+intro <- enroll |>
+  filter(
+    str_detect(str_to_lower(course_title), "intro|introduc|introduction|foundations|principles") |
+    (course_num >= 100 & course_num <= 199)
+  )
+
+intro_retention_data <- intro |>
+  left_join(enroll, by = c("student_id", "department"), suffix = c("_intro", "_any")) |>
+  group_by(student_id, department, course_code_intro, course_title_intro, term_intro) |>
+  summarise(continued = any(term_any > term_intro), .groups = "drop") |>
+  group_by(department, intro_course_code = course_code_intro, intro_course_title = course_title_intro) |>
+  summarise(
+    n_students = n_distinct(student_id),
+    n_continue = sum(continued),
+    retention_rate = (n_continue / n_students) * 100,
+    .groups = "drop"
+  ) |>
+  filter(n_students >= 10) |> # Raised to 10 for better course-level stability
   arrange(desc(retention_rate))
