@@ -18,6 +18,7 @@ excluded_cols <- c(
   "minors_minors_desc",
   "students_stu_active_minors"
 )
+
 cleaned_data <- raw_data |>
   mutate(across(where(is.character), ~ na_if(.x, "NA") |> na_if("NONE"))) |>
   mutate(
@@ -43,7 +44,31 @@ cleaned_data <- raw_data |>
   mutate(
     primary_major = coalesce(students_stu_active_majors, stu_acad_programs)
   ) |>
+  mutate( # students_xstu_grad_app_major align with coding in students_stu_active_majors and students_stu_majors
+    students_xstu_grad_app_major = if_else(
+      students_xstu_grad_app_major == "BUSMDM", 
+      "BUMDM", 
+      students_xstu_grad_app_major
+    ),
+    students_xstu_grad_app_major = if_else(
+      str_detect(students_xstu_grad_app_major, "\\."),
+      str_remove_all(students_xstu_grad_app_major, "\\.B\\w"),
+      students_xstu_grad_app_major
+    ),
+    students_xstu_grad_app_major = if_else(
+      str_detect(students_xstu_grad_app_major, "�"),
+      str_replace_all(students_xstu_grad_app_major, "�", ","),
+      students_xstu_grad_app_major
+    ),
+    across(
+      c(students_xstu_grad_app_major, students_stu_majors),
+      ~ if_else(. == "ACCT", "ACC", .)
+    )
+  ) |> 
   select(-all_of(excluded_cols))
+
+# *** LOOK AT THIS ***
+setdiff(cleaned_data$students_xstu_grad_app_major, cleaned_data$students_stu_majors)
 
 # add a refined grad column
 cleaned_data <- cleaned_data |>
@@ -70,8 +95,12 @@ cleaned_data <- cleaned_data |>
 
 cleaned_data <- cleaned_data |>
   mutate(
-    refined_gender = case_when(
+    gender = case_when( # when visualizing, use male/female/other
       person_gender_identity == "TRANSGEN" ~ "Transgender",
+      person_gender_identity == "AGEND" ~ "Agender",
+      person_gender_identity == "BIGEND" ~ "Bigender",
+      person_gender_identity == "POLYGEND" ~ "Polygender",
+      person_gender_identity == "GENFLU" ~ "Genderfluid",
       TRUE ~ gender
     )
   ) |>
@@ -99,11 +128,41 @@ cleaned_data <- cleaned_data |>
   group_by(stc_person) |>
   mutate(classes_taken = n())
 
+major_switched <- cleaned_data |> #col to look at major switching
+  select(
+    stc_person,
+    students_stu_majors,
+    students_xstu_grad_app_major
+  ) |> 
+  distinct(stc_person, .keep_all = TRUE) |>
+  mutate(
+    majors = if_else( # remove NON and OPEN majors
+      str_detect(students_stu_majors, ","), 
+      str_remove_all(students_stu_majors, ",?NON,?|,?OPEN,?"), 
+      NA
+    ),
+    dropped_majors_list = map2_chr( # list of dropped majors, separated by ", "
+      majors,
+      students_xstu_grad_app_major,
+      ~ {
+        if (is.na(.x) || is.na(.y)) {
+          return(NA_character_)
+        }
 
-cleaned_data <- cleaned_data |> #col to look at major switching
-  group_by(stc_person) |>
+        applied <- str_split(.x, ",", simplify = TRUE)
+        current <- str_split(.y, ",", simplify = TRUE)
+        dropped <- setdiff(applied, current)
 
-  ungroup()
+        if_else(setequal(applied, current), NA, str_flatten_comma(dropped))
+      }
+    ),
+    switched_majors = if_else(is.na(dropped_majors_list), FALSE, TRUE) # lgl, did switch majors?
+    # .keep = "unused"
+  ) |> 
+  arrange(dropped_majors_list)
+
+cleaned_data <- cleaned_data |> 
+  left_join(major_switched, join_by(stc_person))
 
 glimpse(cleaned_data)
 
