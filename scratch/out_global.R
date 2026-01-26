@@ -43,13 +43,38 @@ cleaned_data <- raw_data |>
   mutate(
     primary_major = coalesce(students_stu_active_majors, stu_acad_programs)
   ) |>
-  mutate(across(c(primary_major, students_xstu_grad_app_major, students_stu_majors), ~ {
-    .x |>
-      str_replace_all("BUSMDM", "BUMDM") |>
-      str_replace_all("ACCT", "ACC") |>
-      str_remove_all("\\.B\\w")
-  })) |>
+  mutate(
+    primary_major = coalesce(students_xstu_grad_app_major, primary_major),
+    students_stu_majors = coalesce(students_stu_majors,
+                                  students_xstu_grad_app_major)
+  ) |>
+  mutate(
+    across(c(primary_major,
+            students_xstu_grad_app_major,
+            students_stu_majors), ~
+      .x |>
+        str_replace_all("\uFFFD", ",") |>
+        str_replace_all("[[:space:]\u00A0]", "") |>   
+        str_remove_all("\\.B\\w") |>         
+        str_split(",") |>
+        map_chr(~ {
+          majors <- .x
+
+          majors <- case_when(
+            majors == "BUSMDM" ~ "BUMDM",
+            majors == "ACCT"   ~ "ACC",
+            majors == "BIOC"   ~ "BIOCH",
+            majors == "CSMA"   ~ "CSMAS",
+            majors == "FINC"   ~ "FIN",
+            TRUE ~ majors
+          )
+
+          paste(sort(majors), collapse = ",")
+        })
+    )
+  ) |>
   select(-all_of(excluded_cols))
+
 
 cleaned_data <- cleaned_data |>
   mutate(
@@ -81,7 +106,7 @@ cleaned_data <- cleaned_data |>
     start_term_index = min(term_index, na.rm = TRUE),
     ever_graduated = any(!is.na(person_xper_grad_term)),
     years_to_grad = if_else(ever_graduated, max(term_index) - start_term_index, NA_real_),
-    has_next_year = any(term_year == (term_year + 1)),
+    has_next_year = any(term_year %in% (term_year + 1)),
     status = case_when(
       ever_graduated ~ "Graduated",
       term_year == max(raw_data$term_reporting_year, na.rm = TRUE) ~ "Currently Enrolled",
