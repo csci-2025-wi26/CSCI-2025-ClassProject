@@ -1,0 +1,129 @@
+---
+title: "Performance"
+author: "The Performance team"
+format: html
+---
+
+# 1.1 INTRODUCTION 
+
+As a class, we are developing an application designed to help faculty better understand equity in student outcomes.
+
+ Our performance group is responsible for creating an interactive tab that allows users to explore DFW rates (D,F, and Withdraw) and GPA across selected student groups. 
+
+ This tab allows faculty to filter and compare outcomes by variables such a gender, race, department, course level and the class standing.
+
+ For this component, we used student IDs as unique IDs, converted letter grades into numeric GPA values and created variables such as DFW rate and course level classifications. We created a format with which we can filter lower and upper divison courses. All newly created variables were tested and no missing values and AU values were found.
+
+# 1.2 Data 
+ 
+The registrar dataset was imported and several cleaning and transformations were done.
+
+First, we created a DFW indicator variable. Grades A through C and Pass were coded as 1, and grades of D,F AND W were coded as 0. 
+
+```{r}
+clean_data <- raw_data |> 
+  mutate(dfw = case_when(
+    xstc_verified_lettr_grade %in% c("A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "P") ~ 1, 
+    xstc_verified_lettr_grade %in% c('W', "F", "D-", "D", "D+")  ~ 0
+  ))
+
+<<<<<<< HEAD:scratch/Performance.qmd
+=======
+#__________add numeric gpa_______________
+
+updated_clean_data <- clean_data |> 
+  mutate(grade_numeric = case_when(
+    xstc_verified_lettr_grade == "A" ~ 4.0,
+    xstc_verified_lettr_grade == "A-" ~ 3.70,
+    xstc_verified_lettr_grade == "B+" ~ 3.30,
+    xstc_verified_lettr_grade == "B" ~ 3.00,
+    xstc_verified_lettr_grade == "B-" ~ 2.70,
+    xstc_verified_lettr_grade == "C+" ~ 2.30,
+    xstc_verified_lettr_grade == "C" ~ 2.00,
+    xstc_verified_lettr_grade == "C-" ~1.70,
+    xstc_verified_lettr_grade == "D+" ~ 1.30,
+    xstc_verified_lettr_grade == "D" ~ 1.00,
+    xstc_verified_lettr_grade == "D-" ~ 0.70,
+    xstc_verified_lettr_grade == "F" ~ 0.00 
+  )) 
+
+#turn all the AU grades in letter grades column into NA's so they can be handled.
+updated_clean_data <- updated_clean_data |> 
+  mutate(xstc_verified_lettr_grade = na_if(xstc_verified_lettr_grade, "AU")) 
+
+#this makes upper and lower division column. tested, includes no NA's. assumes that '1's are '100'
+updated_clean_data <- updated_clean_data |> 
+  mutate(upper_lower_div = case_when(str_detect(crs_no, "^1.*") | str_detect(crs_no, "^2.*") ~ "lower",
+        str_detect(crs_no, "^3.*") | str_detect(crs_no, "^4.*") | str_detect(crs_no, "5.*") | str_detect(crs_no, "6.*") ~ "upper") 
+  ) 
+
+#make a column that specifies the course level so that users can eventually be able to filter/select by course level. Assumed 3-digit format still. Tested and confirmed no NA's in this column.
+#note that this will work for BOTH the 3-digit format, and the new 4-digit format of course numbers.
+updated_clean_data <- updated_clean_data |> 
+  mutate(crs_level = case_when(str_detect(crs_no, "^1.*") ~ "1XXX",
+                              str_detect(crs_no, "^2.*") ~ "2XXX",
+                              str_detect(crs_no, "^3.*")~ "3XXX", 
+                              str_detect(crs_no, "^4.*") ~ "4XXX", 
+                              str_detect(crs_no, "^5.*") ~ "5XXX", 
+                              str_detect(crs_no, "^6.*") ~ "6XXX"
+                            )
+                          )
+
+
+#strip the commas from the students_stu_class
+updated_clean_data <- updated_clean_data |> 
+  mutate(students_stu_class = str_remove_all(students_stu_class, ","))
+
+#remove numbers and extra whitespace from re
+updated_clean_data <- updated_clean_data |> 
+  mutate(re = str_replace(re, "[^a-zA-Z]{2,}", ""))
+
+#some expected graduation years in xstu_grad_acad_year contain two values. 
+#in order to not lose information we will keep these values, but add a comma for clarity.
+#also switch to character instead of dbl since this is more of a category.
+updated_clean_data <- updated_clean_data |> 
+  mutate(students_xstu_grad_acad_year = as.character(students_xstu_grad_acad_year)) |> 
+  mutate(
+    students_xstu_grad_acad_year = str_replace(students_xstu_grad_acad_year, "^(\\d{4})(\\d+)", "\\1,\\2")
+  )
+
+
+
+write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
+
+
+
+#Run this command to bring the dataframe into your script:
+ cleaned_data <- read_csv("data/processed/cleaned_data.csv", 
+                       col_types = cols(
+                              students_xstu_grad_acad_year = col_character(), 
+                              term_numeric = col_character(),
+                              stc_person = col_character(),
+                              term_reporting_year = col_character()
+                        )
+                  )
+
+>>>>>>> 7ff11d687d035982000e019e07e261975061068d:Performance.qmd
+```
+
+
+
+Then, we converted the letter grades into numeric GPA values using 4.0 grading scale. This made it easier to compute mean GPAs and summary across different groups. Grades marked as AU were recorded as missing vales so they would not affect the GPA or DFW calculations.
+
+We then created two structural variables related to course level:
+
+&bull; **Upper/Lower Division Course**: 
+
+Courses numbered in the 100-200 range were labeled as lower division courses and the courses in the 300-600 range were labeled as upper division.
+
+&bull; **Course level (crs_level)** :
+
+We created categories such as 1XX,2XX,3XX, etc. This column contains no missing values and is used directly for the filtering in the app.
+
+Additional cleaning steps were included in removing commas from class standings and non-alphabetic charaters were removed from race/ethnicity fields. The final dataset was saved as cleaned_data.csv which is the main dataset for all the analysis and visualizations.
+
+
+
+# I haven't put the coding part yet 
+
+ 
