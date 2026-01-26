@@ -8,7 +8,7 @@ format: html
 
 As a class, we are developing an application designed to help faculty better understand equity in student outcomes.
 
- Our performance group is responsible for creating an interactive tab that allows users to explore DFW rates ( D,F, and Withdraw) and GPA across selected student groups. 
+ Our performance group is responsible for creating an interactive tab that allows users to explore DFW rates (D,F, and Withdraw) and GPA across selected student groups. 
 
  This tab allows faculty to filter and compare outcomes by variables such a gender, race, department, course level and the class standing.
 
@@ -97,18 +97,15 @@ write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
 
 
 
-# Run this command to bring the dataframe into your script:
-#  cleaned_data <- read_csv("data/processed/cleaned_data.csv", 
-#                        col_types = cols(
-#                               students_xstu_grad_acad_year = col_character(), 
-#                               term_numeric = col_character(),
-#                               stc_person = col_character(),
-#                               term_reporting_year = col_character()
-#                         )
-#                   )
-
-
-
+#Run this command to bring the dataframe into your script:
+ cleaned_data <- read_csv("data/processed/cleaned_data.csv", 
+                       col_types = cols(
+                              students_xstu_grad_acad_year = col_character(), 
+                              term_numeric = col_character(),
+                              stc_person = col_character(),
+                              term_reporting_year = col_character()
+                        )
+                  )
 
 ```
 
