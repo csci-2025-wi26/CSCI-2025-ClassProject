@@ -19,6 +19,7 @@ excluded_cols <- c(
   "students_stu_active_minors"
 )
 
+
 cleaned_data <- raw_data |>
   mutate(across(where(is.character), ~ na_if(.x, "NA") |> na_if("NONE"))) |>
   mutate(
@@ -44,83 +45,81 @@ cleaned_data <- raw_data |>
   mutate(
     primary_major = coalesce(students_stu_active_majors, stu_acad_programs)
   ) |>
-  mutate( # students_xstu_grad_app_major align with coding in students_stu_active_majors and students_stu_majors
-    students_xstu_grad_app_major = if_else(
-      students_xstu_grad_app_major == "BUSMDM", 
-      "BUMDM", 
-      students_xstu_grad_app_major
-    ),
-    students_xstu_grad_app_major = if_else(
-      str_detect(students_xstu_grad_app_major, "\\."),
-      str_remove_all(students_xstu_grad_app_major, "\\.B\\w"),
-      students_xstu_grad_app_major
-    ),
-    students_xstu_grad_app_major = if_else(
-      str_detect(students_xstu_grad_app_major, "�"),
-      str_replace_all(students_xstu_grad_app_major, "�", ","),
-      students_xstu_grad_app_major
-    ),
-    across(
-      c(students_xstu_grad_app_major, students_stu_majors),
-      ~ if_else(. == "ACCT", "ACC", .)
+  mutate(
+    primary_major = coalesce(students_xstu_grad_app_major, primary_major),
+    students_stu_majors = coalesce(students_stu_majors,
+                                  students_xstu_grad_app_major)
+  ) |>
+  mutate(
+    across(c(primary_major,
+            students_xstu_grad_app_major,
+            students_stu_majors), ~
+      .x |>
+        str_replace_all("\uFFFD", ",") |>
+        str_replace_all("[[:space:]\u00A0]", "") |>   
+        str_remove_all("\\.B\\w") |>         
+        str_split(",") |>
+        map_chr(~ {
+          majors <- .x
+
+          majors <- case_when(
+            majors == "BUSMDM" ~ "BUMDM",
+            majors == "ACCT"   ~ "ACC",
+            majors == "BIOC"   ~ "BIOCH",
+            majors == "CSMA"   ~ "CSMAS",
+            majors == "FINC"   ~ "FIN",
+            TRUE ~ majors
+          )
+
+          paste(sort(majors), collapse = ",")
+        })
     )
-  ) |> 
+  ) |>
   select(-all_of(excluded_cols))
 
-# *** LOOK AT THIS ***
-setdiff(cleaned_data$students_xstu_grad_app_major, cleaned_data$students_stu_majors)
 
-# add a refined grad column
 cleaned_data <- cleaned_data |>
   mutate(
-    grad_year = {
+    grad_year = if_else(
+      is.na(person_xper_grad_term),
+      if_else(is.na(students_xstu_grad_acad_year), NA_real_, as.numeric(students_xstu_grad_acad_year)),
       if_else(
-        # if NA, check grad_acad_year column
-        is.na(person_xper_grad_term),
-        if_else(
-          # if grad_acad_year also NA, NA, else replace with value
-          is.na(students_xstu_grad_acad_year),
-          NA,
-          students_xstu_grad_acad_year
-        ),
-        if_else(
-          # extract year from grad_term
-          str_extract(person_xper_grad_term, "(FA|SP|WI|SU)") == "FA", # extracts first one, UG, not grad
-          2000 + parse_number(person_xper_grad_term), # fall term
-          2000 + parse_number(person_xper_grad_term) - 1 # spring, winter, and summer terms list academic year
-        )
+        str_extract(person_xper_grad_term, "(FA|SP|WI|SU)") == "FA",
+        2000 + parse_number(person_xper_grad_term),
+        2000 + parse_number(person_xper_grad_term) - 1
       )
-    }
+    )
   )
 
+# Demographic and Graduation Status Logic
 cleaned_data <- cleaned_data |>
   mutate(
-    gender = case_when( # when visualizing, use male/female/other
+    gender = case_when( 
       person_gender_identity == "TRANSGEN" ~ "Transgender",
-      person_gender_identity == "AGEND" ~ "Agender",
-      person_gender_identity == "BIGEND" ~ "Bigender",
+      person_gender_identity == "AGEND"    ~ "Agender",
+      person_gender_identity == "BIGEND"   ~ "Bigender",
       person_gender_identity == "POLYGEND" ~ "Polygender",
-      person_gender_identity == "GENFLU" ~ "Genderfluid",
-      TRUE ~ gender
+      person_gender_identity == "GENFLU"   ~ "Genderfluid",
+      TRUE ~ gender # Keeps the "Male"/"Female" from your previous step
     )
   ) |>
   group_by(stc_person) |>
   mutate(
     start_term_index = min(term_index, na.rm = TRUE),
     ever_graduated = any(!is.na(person_xper_grad_term)),
-    years_to_grad = if_else(
-      !is.na(person_xper_grad_term),
-      term_index - start_term_index,
-      NA_real_
-    )
+    years_to_grad = if_else(ever_graduated, max(term_index) - start_term_index, NA_real_),
+    has_next_year = any(term_year %in% (term_year + 1)),
+    status = case_when(
+      ever_graduated ~ "Graduated",
+      term_year == max(raw_data$term_reporting_year, na.rm = TRUE) ~ "Currently Enrolled",
+      TRUE ~ "Dropped"
+    ),
+    classes_taken = n()
   ) |>
   mutate(
-    has_next_year = any(term_year == (term_year + 1)),
-    status = case_when(
-      !is.na(person_xper_grad_term) ~ "Graduated",
-      term_year == max(cleaned_data$term_year) ~ "Currently Enrolled",
-      !ever_graduated & !has_next_year ~ "Dropped"
-    )
+    first_major = first(primary_major, order_by = term_index),
+    last_major  = last(primary_major, order_by = term_index),
+    switched_majors = first_major != last_major
   ) |>
   ungroup()
 
