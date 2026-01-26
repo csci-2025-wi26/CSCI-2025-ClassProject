@@ -6,13 +6,6 @@ cleaned_data <- read_csv("data/clean/registrar_cleaned.csv")
 View(cleaned_data)
 
 graduation_data <- cleaned_data |>
-  select(
-    stc_person,
-    students_xstu_grad_acad_year,
-    students_stu_active_majors,
-    stc_acad_level,
-    term_reporting_year
-  ) |>
   filter(
     students_xstu_grad_acad_year >= term_reporting_year - 1 & # term reporting year isn't past the spring term
       stc_acad_level == "UG" & # remove graduate students for now
@@ -21,32 +14,18 @@ graduation_data <- cleaned_data |>
   distinct(stc_person, .keep_all = TRUE) |> # unique students
   mutate(
     graduated = if_else(is.na(students_xstu_grad_acad_year), FALSE, TRUE)
-  ) |>
-  select(stc_person, graduated)
+  )
 
 graduation_data <- graduation_data |>
   right_join(cleaned_data, join_by(stc_person)) |>
   mutate(graduated = coalesce(graduated, FALSE)) |> # if the student didn't graduate, they didn't graduate
   relocate(stc_person, graduated) |>
-  distinct(stc_person, .keep_all = TRUE)
-
-#new work on determining graduation status
-graduation_data <- cleaned_data |>
-  select(
-    stc_person,
-    person_xper_grad_term,
-    students_stu_active_majors,
-    stc_acad_level,
-    term_reporting_year,
-    students_stu_class,
-    students_xstu_grad_acad_year
-  ) |>
+  distinct(stc_person, .keep_all = TRUE) |>
   filter(
     students_xstu_grad_acad_year >= term_reporting_year - 1 & # term reporting year isn't past the spring term
       stc_acad_level == "UG" & # remove graduate students for now
       students_stu_active_majors != "NON" # remove non-degree seeking students
-  ) |>
-  mutate(graduated = )
+  )
 
 View(graduation_data)
 
@@ -120,16 +99,14 @@ student_year_summary %>%
 
 graduation_year_data <- graduation_data |>
   group_by(stc_person) |>
-  summarize(
+  mutate(
     grad_year = first(grad_year),
-    start_year = min(term_index, na.rm = TRUE),
+    start_year = min(term_reporting_year, na.rm = TRUE),
     years_to_grad = grad_year - start_year
   ) |>
   ungroup()
-glimpse(graduation_year_data)
 
-graduation_year_plot_data <- graduation_data |>
-  left_join(graduation_year_data, by = "stc_person") |>
+graduation_year_plot_data <- graduation_year_data |>
   mutate(dept = str_extract(primary_major, "^[^,]+"))
 
 
@@ -153,20 +130,30 @@ graduation_year_plot_data |>
   )
 
 #Graph that looks at years to graduation by year and department fill is pell recipient
-target_dept <- "BIOMD"
+target_dept <- "POE"
+demographic <- "race_ethnicity"
+color_list <- c(
+  "#228B22",
+  "#00BFFF",
+  "#E2725B",
+  "#008080",
+  "#000080",
+  "#FF7F50",
+  "#6A5ACD",
+  "#D4AF37",
+  "#3E2723",
+  "#98FF98"
+)
+
 graduation_year_plot_data |>
   filter(dept == target_dept) |>
   ggplot(aes(
     x = as.factor(term_year),
     y = years_to_grad,
-    colour = pell_recipient
+    color = .data[[demographic]]
   )) +
   geom_jitter() +
-  scale_color_manual(
-    values = c("TRUE" = "#533860", "FALSE" = "#FFF42A"),
-    labels = c("Recipient", "Not Recipient"),
-    na.translate = TRUE
-  ) +
+  #scale_color_manual(values = color_list) +
   theme_minimal() +
   labs(
     title = sprintf("Years to Graduation — %s", target_dept),
