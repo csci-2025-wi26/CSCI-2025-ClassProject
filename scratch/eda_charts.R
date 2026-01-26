@@ -3,6 +3,21 @@ library(dplyr)
 
 cleaned_data <- read_csv("data/processed/cleaned_data.csv")
 
+#Theme
+theme_yote <- function() {
+  theme_minimal(
+    base_family = "Roboto Slab"
+  ) +
+  theme(
+    axis.text.x = element_text(size = 12),
+    legend.text  = element_text(size = 12),
+    legend.title  = element_text(size = 15),
+    legend.position = "top",
+    title = element_text(size = 18, family = "Proxima Nova"),
+    rect = element_rect(fill = "#533860")
+  )
+}
+
 mean_scores <- gradeAverageDepartment |>
   ggplot(aes(x = reorder(stc_depts, mean_department), y = mean_department, fill = mean_department >= 3.30)) +
   geom_col() +
@@ -80,4 +95,65 @@ dfwDeptMath <- cleaned_data |>
 
 ggsave("plots/dfw_by_dept_math.png", plot = dfwDeptMath, width = 10, height = 16)
 
+#________
 
+dfw_rates_gender <- cleaned_data |> 
+  group_by(person_gender) |> 
+  summarise(mean(dfw, na.rm = TRUE))
+
+dfw_rates_dept <- cleaned_data |> 
+  group_by(stc_depts) |> 
+  summarize(mean(dfw, na.rm = TRUE))
+
+dfw_rates_gender_bp <- cleaned_data |> 
+  group_by(person_gender) |> 
+  reframe(dfw, na.rm = TRUE)
+
+grades_gender <- cleaned_data |> 
+  group_by(person_gender) |> 
+  reframe(grade_numeric, na.rm = TRUE)
+
+
+dfw_rates_gender |>
+  ggplot(aes(x = person_gender, y = `mean(dfw, na.rm = TRUE)`)) + 
+  geom_col()+
+  coord_cartesian(ylim = c(0.95, NA)) +
+  labs(
+  ) +
+  theme_yote()
+
+dfw_rates_gender |>
+  ggplot(aes(x = person_gender, y = `mean(dfw, na.rm = TRUE)`)) + 
+  geom_col()+
+  coord_cartesian(ylim = c(0.95, NA)) +
+  labs(
+  ) +
+  theme_yote()
+
+#___________________________
+
+dfwDeptMath <- cleaned_data |>
+  filter(!is.na(students_stu_class),
+          stc_depts %in% "MATPH") |>
+  ggplot(aes(x = interaction(class_level, stc_course_name, lex.order = TRUE), y = dfw, na.rm = TRUE, fill = class_level)) +
+  geom_col() +
+  scale_fill_manual(
+    values = c(
+    "1" = "#533860",
+    "2" = "#228B22",
+    "3" = "#00BFFF",
+    "4" = "#E2725B"
+  )) +
+  scale_x_discrete(labels = cleaned_data$stc_course_name) +
+  labs(
+    x = "Classes (Math Department)",
+    y = "Students with a D, F, or W",
+    title = "DFW by Class (Math Department)"
+  ) +
+  theme_minimal() +
+  theme(
+    title = element_text(size = 18, family = "Proxima Nova"),
+    axis.text.x = element_text(size = 12, )
+    
+  ) +
+  coord_flip()
