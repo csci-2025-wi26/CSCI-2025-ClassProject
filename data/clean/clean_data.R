@@ -156,7 +156,7 @@ major_switched <- cleaned_data |> #col to look at major switching
         if_else(setequal(applied, current), NA, str_flatten_comma(dropped))
       }
     ),
-    switched_majors = if_else(is.na(dropped_majors_list), FALSE, TRUE), # lgl, did switch majors?
+    switched_majors = if_else(is.na(dropped_majors_list), FALSE, TRUE) # lgl, did switch majors?
     # .keep = "unused"
   ) |> 
   arrange(dropped_majors_list)
