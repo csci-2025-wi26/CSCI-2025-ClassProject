@@ -112,11 +112,15 @@ server <- function(input, output, session) {
   # Outcomes server stuff goes here!
   output$select_major_ui <- renderUI({
     req(input$select_dept)
+    
+    dept_majors <- majors_by_dept |> 
+      filter(acad_dept == input$select_dept) |> 
+      pull(major)
 
     selectInput(
       "select_major",
       "Major",
-      choices = majors_by_dept
+      choices = dept_majors
     )
   })
 
