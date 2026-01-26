@@ -237,8 +237,29 @@ student_year_summary |>
 graduation_year_data <- cleaned_data |>
   group_by(stc_person) |>
   summarize(
-    grad_year = first(grad_year),
-    start_year = min(term_index, na.rm = TRUE),
-    years_to_grad = grad_year - start_year
-  ) |>
-  ungroup()
+    final_grad_year = first(grad_year),
+    entry_year      = min(term_year, na.rm = TRUE),
+    
+    years_to_grad   = final_grad_year - entry_year,
+    
+    years_to_grad   = if_else(years_to_grad < 0, 0, years_to_grad),
+    
+    precise_years   = if_else(!is.na(final_grad_year), 
+                            first(grad_year) - first(start_term_index), 
+                            NA_real_),
+    precise_years   = if_else(precise_years < 0, 0, precise_years),
+    
+    grad_speed_category = case_when(
+      years_to_grad <= 2 ~ "Transfer (0-2 yrs)",
+      years_to_grad == 3 ~ "Early Grad (3 yrs)",
+      years_to_grad == 4 ~ "Traditional (4 yrs)",
+      years_to_grad > 4  ~ "Extended (5+ yrs)"
+    ),
+    
+    race   = first(race_ethnicity),
+    gender = first(gender),
+    .groups = "drop"
+  ) |> 
+  filter(!is.na(years_to_grad))
+
+glimpse(graduation_year_data)
