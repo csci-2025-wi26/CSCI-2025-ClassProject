@@ -1,16 +1,17 @@
 library(tidyverse)
 library(dplyr)
 
-enrollment_registrar_data <- read_csv("data/raw/cleaned_registrar_data.csv")
+registrar <- read_csv("data/raw/cleaned_registrar_data.csv")
 
-enrollment_clean_data <- enrollment_registrar_data |>
-  separate_longer_delim(students_stu_majors, delim = ',') |>
-  separate_longer_delim(person_per_races, delim = ',') |>
-  mutate(students_stu_majors  = trimws(students_stu_majors)) |>
-  group_by(stc_person, term_reporting_year) |>
-  mutate(major = first(students_stu_majors))
+registrar_weighted <- registrar |>
+  distinct(stc_person, term_reporting_year, .keep_all = TRUE) |> 
+  mutate(race_count = str_count(person_per_races, ",") + 1) |>
+  separate_longer_delim(person_per_races, delim = ",") |>
+  mutate(person_per_races = trimws(person_per_races)) |>
+  mutate(student_weight = 1 / race_count) |> 
+  group_by(stc_person, term_reporting_year)
 
-glimpse(enrollment_clean_data)
+glimpse(registrar_weighted)
 
 
 
