@@ -8,4 +8,3 @@ progression_summary_re |>
     group_by(re) |> 
     ggplot(aes(x = students_stu_class, y = avg_gpa, group = re, color = re)) +
     geom_line()
-
