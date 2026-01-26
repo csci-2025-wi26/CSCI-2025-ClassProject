@@ -18,6 +18,7 @@ excluded_cols <- c(
   "minors_minors_desc",
   "students_stu_active_minors"
 )
+
 cleaned_data <- raw_data |>
   mutate(across(where(is.character), ~ na_if(.x, "NA") |> na_if("NONE"))) |>
   mutate(
@@ -43,7 +44,31 @@ cleaned_data <- raw_data |>
   mutate(
     primary_major = coalesce(students_stu_active_majors, stu_acad_programs)
   ) |>
+  mutate( # students_xstu_grad_app_major align with coding in students_stu_active_majors and students_stu_majors
+    students_xstu_grad_app_major = if_else(
+      students_xstu_grad_app_major == "BUSMDM", 
+      "BUMDM", 
+      students_xstu_grad_app_major
+    ),
+    students_xstu_grad_app_major = if_else(
+      str_detect(students_xstu_grad_app_major, "\\."),
+      str_remove_all(students_xstu_grad_app_major, "\\.B\\w"),
+      students_xstu_grad_app_major
+    ),
+    students_xstu_grad_app_major = if_else(
+      str_detect(students_xstu_grad_app_major, "�"),
+      str_replace_all(students_xstu_grad_app_major, "�", ","),
+      students_xstu_grad_app_major
+    ),
+    across(
+      c(students_xstu_grad_app_major, students_stu_majors),
+      ~ if_else(. == "ACCT", "ACC", .)
+    )
+  ) |> 
   select(-all_of(excluded_cols))
+
+# *** LOOK AT THIS ***
+setdiff(cleaned_data$students_xstu_grad_app_major, cleaned_data$students_stu_majors)
 
 # add a refined grad column
 cleaned_data <- cleaned_data |>
