@@ -11,15 +11,7 @@ dept <- outcomes_data |>
   distinct(stc_person, .keep_all = TRUE) |> 
   select(stc_depts) |> 
   mutate(stc_depts = str_match(stc_depts, "(\\w+),?")[,2]) |> # get first value
-  distinct(stc_depts) |> 
-  mutate(
-    stc_depts = case_when(
-      stc_depts == "POLEC" ~ "POE",
-      stc_depts == "ENVI" ~ "ENV",
-      stc_depts == "ACC" ~ "ACCT",
-      str_detect(stc_depts, "^ATH$|^SOC$|") 
-    )
-  ) |> 
+  distinct(stc_depts) |>  
   pull() |> 
   sort()
 
@@ -34,6 +26,16 @@ majors_by_dept <- outcomes_data |>
   drop_na(major) |> 
   arrange(acad_dept)
 
+plots_by_major <- c("Proportion graduated")
+
+student_year_summary <- outcomes_data |> 
+    mutate(dept = str_extract(primary_major, "^[^,]+")) |> 
+    group_by(stc_person, term_year) |> 
+    mutate(
+      dept = first(dept),
+      status = status,
+      .groups = "drop"
+    )
 
 ui <- fluidPage(
   titlePanel("CSCI2025 Class Project Dashboard"),
@@ -61,8 +63,22 @@ ui <- fluidPage(
     ),
     tabPanel(
       "Outcomes", 
-      selectInput("select_dept", "Department", choices = dept),
-      uiOutput("select_major_ui")
+      fluidRow(
+        column(3,
+          selectInput("select_dept", "Department", choices = dept)
+        ),
+        column(3,
+          uiOutput("select_major_ui")
+        ),
+        column(3,
+          uiOutput("select_plot_ui")
+        )
+      ),
+      fluidRow(
+        column(12,
+          plotOutput("dept_major_plot")
+        )
+      )
     )
   )
 )
@@ -100,6 +116,43 @@ server <- function(input, output, session) {
       "Major",
       choices = majors_by_dept
     )
+  })
+
+  output$select_plot_ui <- renderUI({
+    req(input$select_major)
+
+    selectInput(
+      "select_plot",
+      "Plot",
+      choices = plots_by_major
+    )
+  })
+
+  output$dept_major_plot <- renderPlot({
+    #Graduation Proportion for target department over time
+    req(input$select_major)
+
+    target_dept <- input$select_major # we can handle select for department over time
+    student_year_summary |> 
+      filter(status != "Currently Enrolled" & dept == target_dept) |> 
+      ggplot(aes(x = as.factor(term_year), fill = status)) +
+      geom_bar(position = "fill") +
+      labs(
+        title = sprintf("Student status — %s", target_dept),
+        subtitle = "Retention and graduation, by academic year",
+        x = "Academic year",
+        y = "Share of students (proportion)",
+        fill = "Graduation status"
+      ) +
+      theme_minimal() +
+      scale_fill_manual(
+        values = c("Dropped" = "#533860", "Graduated" = "#FFF42A"),
+        labels = c("Dropped", "Graduated")
+      ) +
+      theme(
+        plot.title = element_text(family = "Proxima Nova"),
+        text = element_text(family = "Roboto Slab")
+      )
   })
 
 }

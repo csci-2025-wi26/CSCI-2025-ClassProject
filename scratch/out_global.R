@@ -207,7 +207,6 @@ student_year_summary <- cleaned_data |>
   group_by(stc_person, term_year) |> 
   mutate(
     dept = first(dept),
-    status = status,
     .groups = "drop"
   )
 
