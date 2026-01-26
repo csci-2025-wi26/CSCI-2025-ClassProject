@@ -26,7 +26,9 @@ majors_by_dept <- outcomes_data |>
   drop_na(major) |> 
   arrange(acad_dept)
 
-plots_by_major <- c("Proportion graduated")
+plots_by_major <- list(
+  "Proportion graduated" = "prop_grad"
+)
 
 student_year_summary <- outcomes_data |> 
     mutate(dept = str_extract(primary_major, "^[^,]+")) |> 
@@ -130,31 +132,34 @@ server <- function(input, output, session) {
 
   output$dept_major_plot <- renderPlot({
     #Graduation Proportion for target department over time
-    req(input$select_major)
-
-    target_dept <- input$select_major # we can handle select for department over time
-    student_year_summary |> 
-      filter(status != "Currently Enrolled" & dept == target_dept) |> 
-      ggplot(aes(x = as.factor(term_year), fill = status)) +
-      geom_bar(position = "fill") +
-      labs(
-        title = sprintf("Student status — %s", target_dept),
-        subtitle = "Retention and graduation, by academic year",
-        x = "Academic year",
-        y = "Share of students (proportion)",
-        fill = "Graduation status"
-      ) +
-      theme_minimal() +
-      scale_fill_manual(
-        values = c("Dropped" = "#533860", "Graduated" = "#FFF42A"),
-        labels = c("Dropped", "Graduated")
-      ) +
-      theme(
-        plot.title = element_text(family = "Proxima Nova"),
-        text = element_text(family = "Roboto Slab")
-      )
+    req(c(input$select_major, input$select_plot))
+    
+    switch(
+      input$select_plot,
+      "prop_grad" = {
+        target_dept <- input$select_major # we can handle select for department over time
+        student_year_summary |> 
+          filter(status != "Currently Enrolled" & dept == target_dept) |> 
+          ggplot(aes(x = as.factor(term_year), fill = status)) +
+          geom_bar(position = "fill") +
+          labs(
+            title = sprintf("Student status — %s", target_dept),
+            subtitle = "Retention and graduation, by academic year",
+            x = "Academic year",
+            y = "Share of students (proportion)",
+            fill = "Graduation status"
+          ) +
+          theme_minimal() +
+          scale_fill_manual(
+            values = c("Dropped" = "#533860", "Graduated" = "#FFF42A"),
+            labels = c("Dropped", "Graduated")
+          ) +
+          theme(
+            plot.title = element_text(family = "Proxima Nova"),
+            text = element_text(family = "Roboto Slab")
+          )
+     })
   })
-
 }
 
 shinyApp(ui, server)
