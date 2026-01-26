@@ -212,7 +212,7 @@ student_year_summary <- cleaned_data |>
   )
 
 #Graduation Proportion for target department over time
-target_dept <- "PSY"
+target_dept <- "PSY" # we can handle select for department over time
 student_year_summary |> 
   filter(status != "Currently Enrolled" & dept == target_dept) |> 
   ggplot(aes(x = as.factor(term_year), fill = status)) +

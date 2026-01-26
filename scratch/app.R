@@ -3,7 +3,37 @@ library(bslib)
 library(shinycssloaders)
 library(tidyverse)
 library(vroom)
- 
+
+# outcomes variables
+outcomes_data <- vroom("../data/clean/registrar_cleaned.csv")
+
+dept <- outcomes_data |> 
+  distinct(stc_person, .keep_all = TRUE) |> 
+  select(stc_depts) |> 
+  mutate(stc_depts = str_match(stc_depts, "(\\w+),?")[,2]) |> # get first value
+  distinct(stc_depts) |> 
+  mutate(
+    stc_depts = case_when(
+      stc_depts == "POLEC" ~ "POE",
+      stc_depts == "ENVI" ~ "ENV",
+      stc_depts == "ACC" ~ "ACCT",
+      str_detect(stc_depts, "^ATH$|^SOC$|") 
+    )
+  ) |> 
+  pull() |> 
+  sort()
+
+majors_by_dept <- outcomes_data |> 
+  distinct(stc_person, .keep_all = TRUE) |> 
+  select(acad_dept = stu_acad_programs, major = students_xstu_grad_app_major.x) |>
+  mutate(across(everything(), ~ str_match(., "(\\w+),?")[,2])) |> # get first value
+  filter(!(major %in% c("NON", "NONGR", "OPEN")) & acad_dept %in% dept) |> 
+  group_by(acad_dept) |> 
+  distinct(major) |> 
+  mutate(major = if_else(major != acad_dept & major %in% acad_dept, NA, major)) |> 
+  drop_na(major) |> 
+  arrange(acad_dept)
+
 
 ui <- fluidPage(
   titlePanel("CSCI2025 Class Project Dashboard"),
@@ -31,13 +61,13 @@ ui <- fluidPage(
     ),
     tabPanel(
       "Outcomes", 
-      selectInput("select_plot", "Select plot", choices = plots)
+      selectInput("select_dept", "Department", choices = dept),
+      uiOutput("select_major_ui")
     )
   )
 )
- 
+
 server <- function(input, output, session) {
-  target_dept <- reactive(analysis_data |> select(stc_dept) |> mutate(stc_dept = str_split(","))[1] (prod_code == input$code))
   ### Home Tab ###
   home_ex_reactive <- reactive({ # Example reactive component
     req(input$home_ex_text_in)
@@ -62,7 +92,15 @@ server <- function(input, output, session) {
 
   ### Outcomes Tab ###
   # Outcomes server stuff goes here!
+  output$select_major_ui <- renderUI({
+    req(input$select_dept)
 
+    selectInput(
+      "select_major",
+      "Major",
+      choices = majors_by_dept
+    )
+  })
 
 }
 
