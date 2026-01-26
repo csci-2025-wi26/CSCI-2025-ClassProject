@@ -52,7 +52,7 @@ retention_data <- raw_data |>
   filter(total_students >= 5) |>
   arrange(desc(retention_rate))
 
-# INTRO COURSE RETENTION DATA  ---
+# INTRO COURSE RETENTION DATA
 
 enroll <- raw_data |>
   select(stc_person, stc_course_name, student_course_sec_stc_title, term_numeric) |>
@@ -60,29 +60,39 @@ enroll <- raw_data |>
   mutate(
     course_code  = str_to_upper(str_squish(as.character(course_code))),
     course_title = str_squish(as.character(course_title)),
-    department   = str_extract(course_code, "^[A-Z]+"),
-    # I add this to Fynn's code to be able to look for 100 level classes. Not all intro classes cointain intro (or related) in their names.
+    # CHANGED: Named this 'dept_code' instead of 'department' to match the filter below
+    dept_code    = str_extract(course_code, "^[A-Z]+"),
     course_num   = as.numeric(str_extract(course_code, "\\d+"))
   ) |>
-  filter(!is.na(student_id), !is.na(term), !is.na(course_code))
+  # Now this filter will work because dept_code actually exists
+  filter(!is.na(student_id), !is.na(term), !is.na(course_code), !is.na(dept_code))
 
 # Keywords OR 100-level
-intro <- enroll |>
-  filter(
-    str_detect(str_to_lower(course_title), "intro|introduc|introduction|foundations|principles") |
-    (course_num >= 100 & course_num <= 199)
-  )
+intro_identify <- enroll |>
+  filter(course_num >= 100 & course_num <= 199) |>
+  filter(str_detect(str_to_lower(course_title), "intro|foundations|principles|general")) |>
+  group_by(dept_code) |>
+  filter(n_distinct(student_id) == max(n_distinct(student_id))) |>
+  slice(1) |>
+  select(dept_code, intro_code = course_code) |>
+  ungroup()
 
-intro_retention_data <- intro |>
-  left_join(enroll, by = c("student_id", "department"), suffix = c("_intro", "_any")) |>
-  group_by(student_id, department, course_code_intro, course_title_intro, term_intro) |>
-  summarise(continued = any(term_any > term_intro), .groups = "drop") |>
-  group_by(department, intro_course_code = course_code_intro, intro_course_title = course_title_intro) |>
+intro_enrollments <- enroll |>
+  inner_join(intro_identify, by = c("dept_code", "course_code" = "intro_code"))
+
+future_enrollments <- enroll |>
+  select(student_id, dept_code, future_term = term)
+
+intro_retention_data <- intro_enrollments |>
+  left_join(future_enrollments, by = c("student_id", "dept_code")) |>
+  group_by(student_id, dept_code, term) |>
+  summarise(continued = any(future_term > term), .groups = "drop") |>
+  group_by(dept_code) |>
   summarise(
     n_students = n_distinct(student_id),
     n_continue = sum(continued),
     retention_rate = (n_continue / n_students) * 100,
     .groups = "drop"
   ) |>
-  filter(n_students >= 10) |> # Raised to 10 for better course-level stability
+  filter(n_students >= 5) |>
   arrange(desc(retention_rate))

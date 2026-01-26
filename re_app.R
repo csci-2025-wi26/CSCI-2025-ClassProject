@@ -12,13 +12,25 @@ ui <- fluidPage(
     
     tabPanel("Department Retention after Intro Course", 
              helpText("Analysis of students who continued in the department after an intro class."),
-             plotOutput("introPlot", height = "800px"))
+             plotOutput("introPlot", height = "800px")),
+    tabPanel("Individual Major Lookup",
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("selectedMajor", 
+                             "Select a Major:", 
+                             choices = sort(unique(retention_data$dept))) # Adjust 'dept' if column name is different
+               ),
+               mainPanel(
+                 plotOutput("majorSpecificPlot")
+               )
+             ))
+
   )
 )
 
 server <- function(input, output) {
   
-  # First Chart: Department Metention by Major
+  # First Chart: Department Retention by Major
   output$deptPlot <- renderPlot({
     ggplot(retention_data, aes(x = reorder(dept, retention_rate), y = retention_rate)) +
       geom_bar(stat = "identity", fill = "#533860") +
@@ -29,16 +41,28 @@ server <- function(input, output) {
       geom_text(aes(label = paste0(round(retention_rate, 1), "%")), hjust = -0.1, size = 3)
   })
   
-  # Second Chart: Department Retention after Intro Course (need to be fixed)
+  # Second Chart: Department Retention after Intro Course
   output$introPlot <- renderPlot({
-    ggplot(intro_retention_data |> head(30), # Showing only top 30 courses, yet is showing to be wrong - 100%+ not what we want -(Working on that...)
-           aes(x = reorder(paste(intro_course_code, "-", intro_course_title), retention_rate), y = retention_rate)) +
-      geom_bar(stat = "identity", fill = "#228B22") +
+    ggplot(intro_retention_data, aes(x = reorder(dept_code, retention_rate), y = retention_rate)) +
+      geom_bar(stat = "identity", fill = "#228B22") + 
       coord_flip() +
       theme_minimal() + 
-      labs(title = "Top 30 Gateway Courses", subtitle = "Retention within department after taking course", x = "Course", y = "Retention Rate (%)") +
+      labs(title = "Retention Rate by Intro Course", subtitle = "Percentage of students who take a second course in the same department", x = "Department", y = "Retention rate (%)") +
       theme(text = element_text(family = "Roboto Slab"), plot.title = element_text(family = "Nova Proxima", face = "bold", size = 18)) +
       geom_text(aes(label = paste0(round(retention_rate, 1), "%")), hjust = -0.1, size = 3)
+  })
+  output$majorSpecificPlot <- renderPlot({
+    # Filter the data based on the dropdown selection
+    filtered_data <- retention_data[retention_data$dept == input$selectedMajor, ]
+    
+    ggplot(filtered_data, aes(x = dept, y = retention_rate)) +
+      geom_bar(stat = "identity", fill = "#B22222", width = 0.4) +
+      theme_minimal() +
+      ylim(0, 100) +
+      labs(title = paste("Retention Details:", input$selectedMajor),
+           x = "Department/Major",
+           y = "Retention Rate (%)") +
+      theme(text = element_text(family = "Roboto Slab"))
   })
 }
 
