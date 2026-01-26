@@ -99,11 +99,41 @@ cleaned_data <- cleaned_data |>
   group_by(stc_person) |>
   mutate(classes_taken = n())
 
+major_switched <- cleaned_data |> #col to look at major switching
+  select(
+    stc_person,
+    students_stu_majors,
+    students_xstu_grad_app_major
+  ) |> 
+  distinct(stc_person, .keep_all = TRUE) |>
+  mutate(
+    majors = if_else( # remove NON and OPEN majors
+      str_detect(students_stu_majors, ","), 
+      str_remove_all(students_stu_majors, ",?NON,?|,?OPEN,?"), 
+      NA
+    ),
+    dropped_majors_list = map2_chr( # list of dropped majors, separated by ", "
+      majors,
+      students_xstu_grad_app_major,
+      ~ {
+        if (is.na(.x) || is.na(.y)) {
+          return(NA_character_)
+        }
 
-cleaned_data <- cleaned_data |> #col to look at major switching
-  group_by(stc_person) |>
+        applied <- str_split(.x, ",", simplify = TRUE)
+        current <- str_split(.y, ",", simplify = TRUE)
+        dropped <- setdiff(applied, current)
 
-  ungroup()
+        if_else(setequal(applied, current), NA, str_flatten_comma(dropped))
+      }
+    ),
+    switched_majors = if_else(is.na(dropped_majors_list), FALSE, TRUE), # lgl, did switch majors?
+    # .keep = "unused"
+  ) |> 
+  arrange(dropped_majors_list)
+
+cleaned_data <- cleaned_data |> 
+  left_join(major_switched, join_by(stc_person))
 
 glimpse(cleaned_data)
 
