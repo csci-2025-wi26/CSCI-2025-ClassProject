@@ -21,11 +21,94 @@ The registrar dataset was imported and several cleaning and transformations were
 First, we created a DFW indicator variable. Grades A through C and Pass were coded as 1, and grades of D,F AND W were coded as 0. 
 
 ```{r}
+library(tidyverse)
+library(dplyr)
+
+raw_data <- read_csv('data/raw/registrar_data.csv')
+
+#adding dfw column
 clean_data <- raw_data |> 
   mutate(dfw = case_when(
     xstc_verified_lettr_grade %in% c("A+", "A", "A-", "B+", "B", "B-", "C+", "C", "C-", "P") ~ 1, 
     xstc_verified_lettr_grade %in% c('W', "F", "D-", "D", "D+")  ~ 0
   ))
+
+#__________add numeric gpa_______________
+
+updated_clean_data <- clean_data |> 
+  mutate(grade_numeric = case_when(
+    xstc_verified_lettr_grade == "A" ~ 4.0,
+    xstc_verified_lettr_grade == "A-" ~ 3.70,
+    xstc_verified_lettr_grade == "B+" ~ 3.30,
+    xstc_verified_lettr_grade == "B" ~ 3.00,
+    xstc_verified_lettr_grade == "B-" ~ 2.70,
+    xstc_verified_lettr_grade == "C+" ~ 2.30,
+    xstc_verified_lettr_grade == "C" ~ 2.00,
+    xstc_verified_lettr_grade == "C-" ~1.70,
+    xstc_verified_lettr_grade == "D+" ~ 1.30,
+    xstc_verified_lettr_grade == "D" ~ 1.00,
+    xstc_verified_lettr_grade == "D-" ~ 0.70,
+    xstc_verified_lettr_grade == "F" ~ 0.00 
+  )) 
+
+#turn all the AU grades in letter grades column into NA's so they can be handled.
+updated_clean_data <- updated_clean_data |> 
+  mutate(xstc_verified_lettr_grade = na_if(xstc_verified_lettr_grade, "AU")) 
+
+#this makes upper and lower division column. tested, includes no NA's. assumes that '1's are '100'
+updated_clean_data <- updated_clean_data |> 
+  mutate(upper_lower_div = case_when(str_detect(crs_no, "^1.*") | str_detect(crs_no, "^2.*") ~ "lower",
+        str_detect(crs_no, "^3.*") | str_detect(crs_no, "^4.*") | str_detect(crs_no, "5.*") | str_detect(crs_no, "6.*") ~ "upper") 
+  ) 
+
+#make a column that specifies the course level so that users can eventually be able to filter/select by course level. Assumed 3-digit format still. Tested and confirmed no NA's in this column.
+#note that this will work for BOTH the 3-digit format, and the new 4-digit format of course numbers.
+updated_clean_data <- updated_clean_data |> 
+  mutate(crs_level = case_when(str_detect(crs_no, "^1.*") ~ "1XXX",
+                              str_detect(crs_no, "^2.*") ~ "2XXX",
+                              str_detect(crs_no, "^3.*")~ "3XXX", 
+                              str_detect(crs_no, "^4.*") ~ "4XXX", 
+                              str_detect(crs_no, "^5.*") ~ "5XXX", 
+                              str_detect(crs_no, "^6.*") ~ "6XXX"
+                            )
+                          )
+
+
+#strip the commas from the students_stu_class
+updated_clean_data <- updated_clean_data |> 
+  mutate(students_stu_class = str_remove_all(students_stu_class, ","))
+
+#remove numbers and extra whitespace from re
+updated_clean_data <- updated_clean_data |> 
+  mutate(re = str_replace(re, "[^a-zA-Z]{2,}", ""))
+
+#some expected graduation years in xstu_grad_acad_year contain two values. 
+#in order to not lose information we will keep these values, but add a comma for clarity.
+#also switch to character instead of dbl since this is more of a category.
+updated_clean_data <- updated_clean_data |> 
+  mutate(students_xstu_grad_acad_year = as.character(students_xstu_grad_acad_year)) |> 
+  mutate(
+    students_xstu_grad_acad_year = str_replace(students_xstu_grad_acad_year, "^(\\d{4})(\\d+)", "\\1,\\2")
+  )
+
+
+
+write_csv(updated_clean_data, "data/processed/cleaned_data.csv")
+
+
+
+# Run this command to bring the dataframe into your script:
+#  cleaned_data <- read_csv("data/processed/cleaned_data.csv", 
+#                        col_types = cols(
+#                               students_xstu_grad_acad_year = col_character(), 
+#                               term_numeric = col_character(),
+#                               stc_person = col_character(),
+#                               term_reporting_year = col_character()
+#                         )
+#                   )
+
+
+
 
 ```
 
@@ -45,8 +128,144 @@ We created categories such as 1XX,2XX,3XX, etc. This column contains no missing 
 
 Additional cleaning steps were included in removing commas from class standings and non-alphabetic charaters were removed from race/ethnicity fields. The final dataset was saved as cleaned_data.csv which is the main dataset for all the analysis and visualizations.
 
+# 1.3 Performance Metrics Used in App
+
+The Performance tab uses two outcomes:
+&bull; **DFW RATE**
+&bull;**Average GPA**
+
+These are calculated for user-selected groups (gender, race/ethnicity, department, course level, standing, etc.).
+
+```{r}
+dfw_by_gender <- cleaned_data |> 
+  group_by(person_gender) |> 
+  summarise(
+    dfw_rate = mean(dfw, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  )
+
+gpa_by_gender <- cleaned_data |> 
+  group_by(person_gender) |> 
+  summarise(
+    avg_gpa = mean(grade_numeric, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  )
+
+dfw_by_gender
+gpa_by_gender
+
+```
 
 
-# I haven't put the coding part yet 
+ # 1.4 Visualizations
 
- 
+  In the Shiny app, the user will select:
+  1. Outcome: DFW or GPA
+  2. Grouping variable: gender, race/ethnicity,department, course level, standing
+  3. Department, Course level, and Division.
+
+  
+  ```{r}
+  gpa_by_dept <- cleaned_data |>
+  group_by(stc_depts) |>
+  summarise(
+    avg_gpa = mean(grade_numeric, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  ) |>
+  arrange(desc(avg_gpa))
+
+gpa_by_dept |> head(10)
+
+  ```
+  ```{r}
+  gpa_by_dept_plot <- gpa_by_dept |>
+  ggplot(aes(x = reorder(stc_depts, avg_gpa), y = avg_gpa)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Mean GPA by Department",
+    x = "Department",
+    y = "Mean GPA"
+  ) +
+  theme_minimal()
+
+gpa_by_dept_plot
+
+  ```
+
+# 1.4.1 DFW Rate by Class Standing
+
+
+```{r}
+dfw_by_standing <- cleaned_data |>
+  filter(!is.na(students_stu_class)) |>
+  group_by(students_stu_class) |>
+  summarise(
+    dfw_rate = mean(dfw, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  )
+
+dfw_by_standing
+
+```
+
+
+```{r}
+dfw_by_standing_plot <- dfw_by_standing |>
+  ggplot(aes(x = students_stu_class, y = dfw_rate)) +
+  geom_col() +
+  labs(
+    title = "DFW Rate by Class Standing",
+    x = "Class Standing",
+    y = "DFW Rate"
+  ) +
+  theme_minimal()
+
+dfw_by_standing_plot
+
+```
+
+# 1.4.2 DFW Rate by Course Level
+
+```{r}
+dfw_by_level <- cleaned_data |>
+  filter(!is.na(crs_level)) |>
+  group_by(crs_level) |>
+  summarise(
+    dfw_rate = mean(dfw, na.rm = TRUE),
+    n = n(),
+    .groups = "drop"
+  )
+
+dfw_by_level
+
+```
+
+
+```{r}
+dfw_by_level_plot <- dfw_by_level |>
+  ggplot(aes(x = crs_level, y = dfw_rate)) +
+  geom_col() +
+  labs(
+    title = "DFW Rate by Course Level",
+    x = "Course Level",
+    y = "DFW Rate"
+  ) +
+  theme_minimal()
+
+dfw_by_level_plot
+
+```
+
+# 1.5 Connection to Shiny Lab
+
+The Shiny app uses the cleaned dataset and generates plots dynamically using the same pattern:
+
+&bull; group_by(selected_group)
+&bull;compute mean(dfw) or mean(grade_numeric)
+&bull;render as bar chart / boxplot / jitter plot depending on the chosen display
+
