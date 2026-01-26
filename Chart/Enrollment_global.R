@@ -18,12 +18,24 @@ registrar <- read_csv("data/raw/cleaned_registrar_data.csv")
 
 library(tidyverse)
 
+#registrar_weighted <- registrar |>
+ # mutate(race_count = str_count(person_per_races, ",") + 1) |>
+  #separate_longer_delim(person_per_races, delim = ",") |>
+  #mutate(person_per_races = trimws(person_per_races)) |>
+  #mutate(student_weight = 1 / race_count) |> 
+  #group_by(stc_person, term_reporting_year)
+
 registrar_weighted <- registrar |>
+
+  # This removes the duplicate rows caused by taking multiple classes
+  distinct(stc_person, term_reporting_year, .keep_all = TRUE) |> 
+
   mutate(race_count = str_count(person_per_races, ",") + 1) |>
   separate_longer_delim(person_per_races, delim = ",") |>
   mutate(person_per_races = trimws(person_per_races)) |>
   mutate(student_weight = 1 / race_count) |> 
   group_by(stc_person, term_reporting_year)
+
 
 race_labels <- c(
   "AN" = "American Indian", 
