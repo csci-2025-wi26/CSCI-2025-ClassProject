@@ -95,8 +95,12 @@ cleaned_data <- cleaned_data |>
 
 cleaned_data <- cleaned_data |>
   mutate(
-    refined_gender = case_when(
+    gender = case_when( # when visualizing, use male/female/other
       person_gender_identity == "TRANSGEN" ~ "Transgender",
+      person_gender_identity == "AGEND" ~ "Agender",
+      person_gender_identity == "BIGEND" ~ "Bigender",
+      person_gender_identity == "POLYGEND" ~ "Polygender",
+      person_gender_identity == "GENFLU" ~ "Genderfluid",
       TRUE ~ gender
     )
   ) |>
