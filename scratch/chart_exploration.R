@@ -117,11 +117,11 @@ student_year_summary %>%
 
 #idea for making new column for years it took to graduate
 #didn't work due to data not spanning far back enough but could have worked with more time
-"
+
 graduation_year_data <- graduation_data |>
   group_by(stc_person) |>
   summarize(
-    grad_year = first(grad_year), 
+    grad_year = first(grad_year),
     start_year = min(term_index, na.rm = TRUE),
     years_to_grad = grad_year - start_year
   ) |>
@@ -129,9 +129,53 @@ graduation_year_data <- graduation_data |>
 glimpse(graduation_year_data)
 
 graduation_year_plot_data <- graduation_data |>
-  left_join(graduation_year_data, by = "'stc_person'")
+  left_join(graduation_year_data, by = "stc_person") |>
+  mutate(dept = str_extract(primary_major, "^[^,]+"))
+
 
 graduation_year_plot_data |>
-  ggplot(aes(x=years_to_grad, fill = pell_recipient)) +
-  geom_bar()
-"
+  ggplot(aes(x = years_to_grad, fill = pell_recipient)) +
+  geom_bar() +
+  labs(
+    title = "Years to Graduation by Pell Recipient Status",
+    x = "Years to Graduate",
+    y = "Number of Students",
+    fill = "Pell Recipient"
+  ) +
+  theme_minimal() +
+  scale_fill_manual(
+    values = c("TRUE" = "#533860", "FALSE" = "#FFF42A"),
+    labels = c("Recipient", "Not Recipient")
+  ) +
+  theme(
+    plot.title = element_text(family = "Proxima Nova"),
+    text = element_text(family = "Roboto Slab")
+  )
+
+#Graph that looks at years to graduation by year and department fill is pell recipient
+target_dept <- "BIOMD"
+graduation_year_plot_data |>
+  filter(dept == target_dept) |>
+  ggplot(aes(
+    x = as.factor(term_year),
+    y = years_to_grad,
+    colour = pell_recipient
+  )) +
+  geom_jitter() +
+  scale_color_manual(
+    values = c("TRUE" = "#533860", "FALSE" = "#FFF42A"),
+    labels = c("Recipient", "Not Recipient"),
+    na.translate = TRUE
+  ) +
+  theme_minimal() +
+  labs(
+    title = sprintf("Years to Graduation — %s", target_dept),
+    subtitle = "Distribution of years to graduation by academic year",
+    x = "Academic year",
+    y = "Years to Graduate",
+    fill = "Pell Recipient"
+  ) +
+  theme(
+    plot.title = element_text(family = "Proxima Nova"),
+    text = element_text(family = "Roboto Slab")
+  )
