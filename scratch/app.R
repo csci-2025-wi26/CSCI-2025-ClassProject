@@ -32,8 +32,19 @@ majors_by_dept <- outcomes_data |>
   distinct(acad_dept, major) |> 
   arrange(acad_dept)
 
-status_by_major <- outcomes_data |> 
-    select(stc_person, primary_major, term_year, status, stc_depts) |> 
+demographic_list <- outcomes_data |> 
+  select(race_ethnicity, gender, pell_recipient) |> 
+  names()
+
+titled_demographic_list <- outcomes_data |> 
+  select(race_ethnicity, gender, pell_recipient) |> 
+  names() |> 
+  str_replace("race_ethnicity", "race/ethnicity") |> 
+  str_replace("_", " ") |> 
+  str_to_title()
+
+status_by <- outcomes_data |> 
+    select(stc_person, primary_major, term_year, status, stc_depts, all_of(demographic_list)) |> 
     mutate(
       acad_dept = str_match(stc_depts, "(\\w+),?")[,2], 
       major = str_extract(primary_major, "^[^,]+"),
@@ -42,6 +53,7 @@ status_by_major <- outcomes_data |>
     ) |> 
     distinct(stc_person, .keep_all = TRUE)
 
+demographic_list <- setNames(as.list(demographic_list), titled_demographic_list)
 
 ui <- fluidPage(
   titlePanel("CSCI2025 Class Project Dashboard"),
@@ -79,13 +91,14 @@ ui <- fluidPage(
       ),
       fluidRow(
         column(3,
-          selectInput("select_plot", "Metric to Plot", choices = outcome_plots)
+          selectInput("select_plot", "Metric to Plot", choices = outcome_plots, selected = outcome_plots[names(outcome_plots)[1]][1])
         ),
         column(3,
-          selectInput("select_dept", "Department", choices = dept)
+          selectInput("select_dept", "Department", choices = dept, selected = dept[1])
         ),
         column(3,
-          uiOutput("select_major_ui")
+          uiOutput("select_major_ui"),
+          uiOutput("select_demographic_ui")
         )
       ),
       fluidRow(
@@ -124,6 +137,10 @@ server <- function(input, output, session) {
 
   ### Outcomes Tab ###
   # Outcomes server stuff goes here!
+  demographic <- reactive({
+    req(input$select_demographic)
+    input$select_demographic
+  })
 
   # if plot with major, render major selectors
   output$select_major_ui <- renderUI({
@@ -140,8 +157,24 @@ server <- function(input, output, session) {
       selectInput(
         "select_major",
         "Major",
-        choices = c("Entire department", dept_majors)
+        choices = c("Entire department", dept_majors),
+        selected = "Entire department"
       )
+  })
+
+  output$select_demographic_ui <- renderUI({
+    req(input$select_dept)
+
+    if (!str_detect(input$select_plot, "demographic")) {
+      return(NULL)
+    }
+
+    selectInput(
+      "select_demographic",
+      "Demographic",
+      choices = demographic_list,
+      selected = titled_demographic_list[1]
+    )
   })
 
   output$dept_major_plot <- renderPlot({
@@ -152,11 +185,10 @@ server <- function(input, output, session) {
       input$select_plot,
       "status_by_major" = {
         if(input$select_major == "Entire department") {
-          prop <- status_by_major |> 
-            filter(acad_dept == input$select_dept) |> 
-            count(status, term_year)
+          prop <- status_by |> 
+            filter(acad_dept == input$select_dept)
         } else {
-          prop <- status_by_major |> 
+          prop <- status_by |> 
             filter(acad_dept == input$select_dept & major == input$select_major)
         }
 
@@ -185,11 +217,16 @@ server <- function(input, output, session) {
           )
       },
       "status_by_demographic" = {
+        demo_col <- input$select_demographic
+        
+        prop <- status_by |> 
+          filter(acad_dept == input$select_dept)
+
         prop |> 
-          ggplot(aes(x = as.factor(demographic), fill = status)) +
+          ggplot(aes(x = .data[[demo_col]], fill = status)) +
           geom_bar(position = "fill") +
           labs(
-           title = sprintf("Student status — %s", input$select_major),
+           title = sprintf("Student status — %s", names(demographic_list)[demographic_list == demo_col]),
             subtitle = "Retention and graduation, by academic year",
             x = "Academic year",
             y = "Proportion of students",
