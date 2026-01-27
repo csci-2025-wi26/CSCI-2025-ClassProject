@@ -2,6 +2,7 @@ library(shiny)
 library(bslib)
 library(shinycssloaders)
 library(tidyverse)
+library(forcats)
  
 ui <- fluidPage(
   titlePanel("CSCI2025 Class Project Dashboard"),
@@ -62,13 +63,29 @@ ui <- fluidPage(
             )
           )
         ),
-        tabPanel("Experiment",
+        tabPanel("GPA Over Time",
           fluidRow(
-            column(12
+            column(12,
+              selectInput("revar", "Choose Race",
+              choices = c("American Indian or Alaska Native", "Asian", "Black or African American",
+                "Hispanic/Latino", "Native Hawaiian or Other Pacific Islander", "Nonresident alien",
+                "Race or ethnicity unknown", "Two or more races", "White"))
             )
           ),
           fluidRow(
-            column(12
+            column(12,
+              plotOutput("plot_re_over_time")
+            )
+          )
+        ),
+        tabPanel(
+          fluidRow(
+            column(12,
+            )
+          ),
+          fluidRow(
+            column(12,
+              plotOutput()
             )
           )
         )
@@ -105,7 +122,7 @@ server <- function(input, output, session) {
   source("scratch\\performance_global.R")
 
   dfw_rates_grouped <- reactive({cleaned_data |>
-    group_by(.data[[input$dfwopt1]]) |>
+    group_by(.data[[input$dfwvar]], .data[[input$dfwvar]]) |>
     summarize(mean(dfw, na.rm = TRUE)) |>
     rename(dfw_rate = 'mean(dfw, na.rm = TRUE)')
   })
@@ -115,13 +132,8 @@ server <- function(input, output, session) {
     summarise(mean(grade_numeric, na.rm = TRUE)) |>
     rename(gpa = 'mean(grade_numeric, na.rm = TRUE)')
   })
-  
-  plot_geom <- reactive({
-    switch(input$dfwopt2,
-    Column = geom_col())
-  })
 
-  plot_geom2 <- reactive({
+  plot_geom <- reactive({
     switch(input$gpaplotchoice,
     Column = geom_col(),
     Boxplot = geom_boxplot(),
@@ -129,18 +141,44 @@ server <- function(input, output, session) {
   })
 
   output$plotdfw <- renderPlot({
-    ggplot(dfw_rates_grouped(), aes(x = .data[[input$dfwopt1]], y = dfw_rate)) + 
-      plot_geom() # can't filter by demographic yet
-  }, res = 96)
+    ggplot(dfw_rates_grouped(), aes(x = .data[[input$dfwvar]], y = dfw_rate)) +
+      geom_col()
+  })
 
   output$plotgpa <- renderPlot({
     if (input$gpaplotchoice == "Column") {
       ggplot(gpa_grouped(), aes(x = .data[[input$gpavar]], y = gpa)) +
-        plot_geom2()
+        plot_geom()
     } else {
       ggplot(cleaned_data, aes(x = .data[[input$gpavar]], y = grade_numeric)) +
-        plot_geom2()
+        plot_geom()
     }
+  })
+
+  progression_summary_re <- cleaned_data |> 
+  group_by(re, students_stu_class) |> 
+  summarise(
+    avg_gpa = mean(grade_numeric, na.rm = TRUE),    # Tracks performance level
+    gpa_variance = var(grade_numeric, na.rm = TRUE), # Tracks "spread" (inequality within group)
+    .groups = "drop"
+  )
+
+  # Create a subset of data for the SINGLE selected line
+  hightlighted_data <- reactive(progression_summary_re |>
+    filter(re == input$revar))
+
+  output$plot_re_over_time <- renderPlot({
+      ggplot() +
+      # Layer 1: Plot ALL lines in light grey (Context)
+      geom_line(data = progression_summary_re,
+                aes(x = students_stu_class, y = avg_gpa, group = re), 
+                color = "lightgrey", size = 0.8) +
+      # Layer 2: Plot SELECTED line in color (Focus)
+      geom_line(data = highlighted_data(),
+                aes(x = students_stu_class, y = avg_gpa, group = re), 
+                color = "#007BC2", size = 1.5) +
+      theme_minimal() +
+      labs(title = paste("Highlighting Line:", input$revar))
   })
 
   ### Retention Tab ###
