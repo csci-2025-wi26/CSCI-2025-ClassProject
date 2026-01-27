@@ -3,6 +3,7 @@ library(bslib)
 library(shinycssloaders)
 library(tidyverse)
 library(vroom)
+library(scales)
 
 # outcomes variables
 outcomes_data <- vroom("../data/clean/registrar_cleaned.csv")
@@ -26,18 +27,23 @@ majors_by_dept <- outcomes_data |>
   drop_na(major) |> 
   arrange(acad_dept)
 
-plots_by_major <- list(
-  "Proportion graduated" = "prop_grad"
+outcome_plots <- list(
+  "By major" = c("Proportion graduated" = "status_by_major")
 )
 
-student_year_summary <- outcomes_data |> 
-    mutate(dept = str_extract(primary_major, "^[^,]+")) |> 
-    group_by(stc_person, term_year) |> 
+status_by_major <- outcomes_data |> 
+    select(stc_person, primary_major, term_year, status, stc_depts) |> 
     mutate(
-      dept = first(dept),
-      status = status,
-      .groups = "drop"
-    )
+      acad_dept = str_match(stc_depts, "(\\w+),?")[,2], 
+      major = str_extract(primary_major, "^[^,]+"),
+      status = if_else(status == "Dropped", "Unenrolled", status),
+      status = fct(status, levels = c("Currently Enrolled", "Graduated", "Unenrolled"))
+    ) |> 
+    distinct(stc_person, .keep_all = TRUE) |> 
+    group_by(acad_dept, major, term_year) |> 
+    count(status) |> 
+    ungroup()
+
 
 ui <- fluidPage(
   titlePanel("CSCI2025 Class Project Dashboard"),
@@ -67,13 +73,13 @@ ui <- fluidPage(
       "Outcomes", 
       fluidRow(
         column(3,
+          selectInput("select_plot", "Plot by department", choices = outcome_plots)
+        ),
+        column(3,
           selectInput("select_dept", "Department", choices = dept)
         ),
         column(3,
           uiOutput("select_major_ui")
-        ),
-        column(3,
-          uiOutput("select_plot_ui")
         )
       ),
       fluidRow(
@@ -110,28 +116,24 @@ server <- function(input, output, session) {
 
   ### Outcomes Tab ###
   # Outcomes server stuff goes here!
+
+  # if plot with major, render major selectors
   output$select_major_ui <- renderUI({
     req(input$select_dept)
-    
+
+    if (!str_detect(input$select_plot, "major")) {
+      return(NULL)
+    }
+
     dept_majors <- majors_by_dept |> 
       filter(acad_dept == input$select_dept) |> 
       pull(major)
 
-    selectInput(
-      "select_major",
-      "Major",
-      choices = dept_majors
-    )
-  })
-
-  output$select_plot_ui <- renderUI({
-    req(input$select_major)
-
-    selectInput(
-      "select_plot",
-      "Plot",
-      choices = plots_by_major
-    )
+      selectInput(
+        "select_major",
+        "Major",
+        choices = c("Entire department", dept_majors)
+      )
   })
 
   output$dept_major_plot <- renderPlot({
@@ -140,29 +142,40 @@ server <- function(input, output, session) {
     
     switch(
       input$select_plot,
-      "prop_grad" = {
-        target_dept <- input$select_major # we can handle select for department over time
-        student_year_summary |> 
-          filter(status != "Currently Enrolled" & dept == target_dept) |> 
+      "status_by_major" = {
+        if(input$select_major == "Entire department") {
+          prop <- status_by_major |> 
+            filter(acad_dept == input$select_dept) |> 
+            count(status, term_year)
+        } else {
+          prop <- status_by_major |> 
+            filter(acad_dept == input$select_dept & major == input$select_major)
+        }
+
+        prop |> 
           ggplot(aes(x = as.factor(term_year), fill = status)) +
           geom_bar(position = "fill") +
           labs(
-            title = sprintf("Student status — %s", target_dept),
+           title = sprintf("Student status — %s", input$select_major),
             subtitle = "Retention and graduation, by academic year",
             x = "Academic year",
-            y = "Share of students (proportion)",
-            fill = "Graduation status"
+            y = "Proportion of students",
+            fill = "Student status"
           ) +
           theme_minimal() +
+          scale_y_continuous(labels = scales::percent) +
           scale_fill_manual(
-            values = c("Dropped" = "#533860", "Graduated" = "#FFF42A"),
-            labels = c("Dropped", "Graduated")
+            values = c(
+              "Currently Enrolled" = "#533860", 
+              "Graduated" = "#FFF42A", 
+              "Unenrolled" = "#F05155"
+            )
           ) +
           theme(
             plot.title = element_text(family = "Proxima Nova"),
             text = element_text(family = "Roboto Slab")
           )
-     })
+      })
   })
 }
 
