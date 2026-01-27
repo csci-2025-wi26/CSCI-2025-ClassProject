@@ -151,11 +151,13 @@ dfw_rates_gender |>
   theme_yote()
 
 #___________________________
+#Probably the most important  plot.
+
 
 dfwDeptMathPro <- cleaned_data |>
   filter(!is.na(students_stu_class), !is.na(dfw),
           stc_depts %in% "MATPH") |>
-  ggplot(aes(x = stc_course_name, fill = factor(dfw))) +
+  ggplot(aes(x = reorder(stc_course_name, dfw), fill = factor(dfw))) +
   geom_bar(position = "fill") +
   geom_hline(
     yintercept = c(0.25, 0.5, 0.75),
@@ -172,13 +174,14 @@ dfwDeptMathPro <- cleaned_data |>
   scale_x_discrete(labels = cleaned_data$stc_course_name) +
   scale_y_continuous(labels = scales::percent) +
   labs(
-    x = "Classes (Math Department)",
-    y = "Students with a D, F, or W",
+    x = "Classes (math department)",
+    y = "Students pass rate",
     title = "DFW by Class (Math Department)",
     fill = "DFW"
   ) +
   theme_minimal() +
   theme(
+    axis.text = element_text(size = 12, family = "Roboto Slab"),
     title = element_text(size = 18, family = "Proxima Nova"),
     axis.text.x = element_text(size = 12, )
     
