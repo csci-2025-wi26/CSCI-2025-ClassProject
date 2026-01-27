@@ -1,98 +1,147 @@
 library(tidyverse)
 library(stringr)
 
-raw_data <- read_csv("data/raw/registrar_data.csv")
-mapping_raw <- read_csv("data/raw/major-department_correlation.csv")
 
-major_to_dept_lookup <- mapping_raw |>
+raw_data     <- read_csv("data/raw/registrar_data.csv", show_col_types = FALSE)
+mapping_raw  <- read_csv("data/raw/major-department_correlation.csv", show_col_types = FALSE)
+dept_list    <- read_csv("data/raw/departments.csv", show_col_types = FALSE)
+
+
+valid_depts <- dept_list |> 
+  select(Dept_Code = `Department Code(s)`, Dept_Name = `College of Idaho Department`) |> 
+  distinct()
+
+
+major_map <- mapping_raw |>
   separate_rows(Code, sep = "/") |>
   mutate(Code = str_trim(Code)) |>
-  select(Code, Department) |>
+  select(Code, Department)
+
+major_overrides <- tribble(
+  ~Code,    ~Department,
+  "ACCTS",  "ACCT",
+  "BIOCH",  "CHE",
+  "COMSC",  "COMM",
+  "REL",    "PHIL",
+  "RELST",  "PHIL",
+  "MUSED",  "MUS",
+  "MUSPF",  "MUS"
+)
+
+final_major_map <- bind_rows(major_map, major_overrides) |>
+  filter(!Code %in% c("APCHE", "BUMDM", "CRW", "EED", "ELIT", "EXPH", 
+                      "HEA", "HPER", "PHARM", "PHE", "PREC", "ROM")) |>
+  semi_join(valid_depts, by = c("Department" = "Dept_Code")) |>
   deframe()
 
-# DEPARTMENT RETENTION DATA
+prefix_map <- c(
+  "ATH"   = "ANSC",
+  "COM"   = "COMM",
+  "ENVI"  = "ENVST",
+  "PHI"   = "PHIL",
+  "POLEC" = "POE",
+  "REL"   = "PHIL"
+)
 
-process_journey <- function(major_string) {
-  if (is.na(major_string)) return(NULL)
-  parts <- str_split(major_string, ",")[[1]] |> str_trim()
-  parts <- rev(parts)
-  parts <- parts[!parts %in% c("OPEN", "NON", "NONGR")]
-  if (length(parts) == 0) return(NULL)
-  dept_parts <- map_chr(parts, ~ {
-    dept <- major_to_dept_lookup[.x]
-    if (is.na(dept)) return(.x) else return(dept)
-  })
-  cleaned <- dept_parts[1]
-  if (length(dept_parts) > 1) {
-    for (i in 2:length(dept_parts)) {
-      if (dept_parts[i] != dept_parts[i-1]) {
-        cleaned <- c(cleaned, dept_parts[i])
-      }
-    }
-  }
-  return(cleaned)
+get_dept <- function(code) {
+  code <- str_trim(code)
+  
+  if (code %in% names(final_major_map)) return(final_major_map[[code]])
+  
+  if (code %in% names(prefix_map)) return(prefix_map[[code]])
+  
+  return(NA_character_)
 }
 
-retention_data <- raw_data |>
+
+# Graph 1
+
+
+student_snapshot <- raw_data |>
   group_by(stc_person) |>
-  filter(term_numeric == max(term_numeric)) |>
+  filter(term_numeric == max(term_numeric)) |> 
   slice(1) |>
   ungroup() |>
-  mutate(journey = map(students_stu_majors, process_journey)) |>
-  filter(!map_lgl(journey, is.null)) |>
-  mutate(transitions = map(journey, ~ {
-    n <- length(.x)
-    tibble(dept = .x, did_shift = c(rep(TRUE, n - 1), FALSE))
-  })) |>
-  select(stc_person, transitions) |>
-  unnest(transitions) |>
-  group_by(dept) |>
-  summarise(total_students = n(), shifters = sum(did_shift), .groups = 'drop') |>
-  mutate(retention_rate = (1 - (shifters / total_students)) * 100) |>
-  filter(total_students >= 5) |>
-  arrange(desc(retention_rate))
+  select(stc_person, students_stu_majors, students_xstu_grad_app_major, students_xstu_grad_acad_year)
 
-# INTRO COURSE RETENTION DATA
+extract_depts <- function(major_str) {
+  if (is.na(major_str)) return(character(0))
+  codes <- str_split(major_str, ",")[[1]] |> str_trim()
+  depts <- map_chr(codes, get_dept)
+  unique(depts[!is.na(depts)])
+}
 
-enroll <- raw_data |>
-  select(stc_person, stc_course_name, student_course_sec_stc_title, term_numeric) |>
-  rename(student_id = stc_person, course_code = stc_course_name, course_title = student_course_sec_stc_title, term = term_numeric) |>
+graduates_data <- student_snapshot |>
+  filter(!is.na(students_xstu_grad_acad_year)) |> 
   mutate(
-    course_code  = str_to_upper(str_squish(as.character(course_code))),
-    course_title = str_squish(as.character(course_title)),
-    # CHANGED: Named this 'dept_code' instead of 'department' to match the filter below
-    dept_code    = str_extract(course_code, "^[A-Z]+"),
-    course_num   = as.numeric(str_extract(course_code, "\\d+"))
+    history_depts = map(students_stu_majors, extract_depts),
+    grad_depts    = map(students_xstu_grad_app_major, extract_depts)
+  )
+
+retention_stats <- valid_depts |>
+  rename(dept = Dept_Code) |>
+  mutate(
+    stats = map(dept, function(d) {
+      ever_declared <- graduates_data |> 
+        filter(map_lgl(history_depts, ~ d %in% .x))
+      
+      denom <- nrow(ever_declared)
+      
+      if (denom == 0) return(tibble(graduated = 0, total = 0, rate = 0))
+      
+      graduated_with <- ever_declared |>
+        filter(map_lgl(grad_depts, ~ d %in% .x)) |>
+        nrow()
+      
+      return(tibble(graduated = graduated_with, total = denom, rate = (graduated_with / denom) * 100))
+    })
   ) |>
-  # Now this filter will work because dept_code actually exists
-  filter(!is.na(student_id), !is.na(term), !is.na(course_code), !is.na(dept_code))
+  unnest(stats)
 
-# Keywords OR 100-level
-intro_identify <- enroll |>
-  filter(course_num >= 100 & course_num <= 199) |>
-  filter(str_detect(str_to_lower(course_title), "intro|foundations|principles|general")) |>
-  group_by(dept_code) |>
-  filter(n_distinct(student_id) == max(n_distinct(student_id))) |>
-  slice(1) |>
-  select(dept_code, intro_code = course_code) |>
-  ungroup()
 
-intro_enrollments <- enroll |>
-  inner_join(intro_identify, by = c("dept_code", "course_code" = "intro_code"))
 
-future_enrollments <- enroll |>
-  select(student_id, dept_code, future_term = term)
+# Graph 2
 
-intro_retention_data <- intro_enrollments |>
-  left_join(future_enrollments, by = c("student_id", "dept_code")) |>
-  group_by(student_id, dept_code, term) |>
-  summarise(continued = any(future_term > term), .groups = "drop") |>
-  group_by(dept_code) |>
-  summarise(
-    n_students = n_distinct(student_id),
-    n_continue = sum(continued),
-    retention_rate = (n_continue / n_students) * 100,
-    .groups = "drop"
+intro_raw <- raw_data |>
+  select(stc_person, stc_course_name, stc_depts, students_xstu_grad_acad_year, students_xstu_grad_app_major) |>
+  mutate(
+    course_num = as.numeric(str_extract(stc_course_name, "\\d+")),
+    prefix = str_trim(stc_depts) 
   ) |>
-  filter(n_students >= 5) |>
-  arrange(desc(retention_rate))
+  filter(course_num >= 100 & course_num <= 199)
+
+get_intro_targets <- function(p) {
+  if (p == "BUACC") return(c("ACCT", "BUS"))
+  if (p == "MATPH") return(c("MATH", "PHY"))
+  
+  val <- get_dept(p)
+  if (is.na(val)) return(NULL)
+  return(val)
+}
+
+intro_mapped <- intro_raw |>
+  mutate(dept_target = map(prefix, get_intro_targets)) |>
+  unnest(dept_target) 
+
+intro_stats <- valid_depts |>
+  rename(dept = Dept_Code) |>
+  mutate(
+    stats = map(dept, function(d) {
+      students_took_intro <- intro_mapped |>
+        filter(dept_target == d) |>
+        pull(stc_person) |>
+        unique()
+      
+      denom <- length(students_took_intro)
+      
+      if (denom == 0) return(tibble(graduated = 0, total = 0, rate = 0))
+      
+      grads_in_major <- graduates_data |>
+        filter(stc_person %in% students_took_intro) |>
+        filter(map_lgl(grad_depts, ~ d %in% .x)) |>
+        nrow()
+      
+      return(tibble(graduated = grads_in_major, total = denom, rate = (grads_in_major / denom) * 100))
+    })
+  ) |>
+  unnest(stats)
