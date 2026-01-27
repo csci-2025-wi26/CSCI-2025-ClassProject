@@ -40,10 +40,10 @@ ui <- fluidPage(
         tabPanel("GPA",
           fluidRow(
             column(12,
-              selectInput("gpaopt1", "Plot by:",
+              selectInput("gpavar", "Plot by:",
                 choices = c("stc_depts", "crs_level", "stc_course_name", "students_stu_class")),
-              selectInput("gpaopt2", "Select Graph", choices = c("Column")),
-              radioButtons("gpaopt3", "Select Demographic", choices = c("person_gender", "re", "pell"))
+              selectInput("gpaplotchoice", "Select Graph", choices = c("Column", "Boxplot", "Jitterplot")),
+              radioButtons("gpadem", "Select Demographic", choices = c("person_gender", "re", "pell"))
             )
           ),
           fluidRow(
@@ -94,14 +94,14 @@ server <- function(input, output, session) {
   # Performance server stuff goes here!
   source("scratch\\performance_global.R")
 
-  dfw_rates_grouped <- reactive({cleaned_data |> 
+  dfw_rates_grouped <- reactive({cleaned_data |>
     group_by(.data[[input$dfwopt1]]) |>
     summarize(mean(dfw, na.rm = TRUE)) |>
     rename(dfw_rate = 'mean(dfw, na.rm = TRUE)')
   })
 
   gpa_grouped <- reactive({cleaned_data |> 
-    group_by(.data[[input$gpaopt1]]) |> 
+    group_by(.data[[input$gpavar]]) |> 
     summarise(mean(grade_numeric, na.rm = TRUE)) |>
     rename(gpa = 'mean(grade_numeric, na.rm = TRUE)')
   })
@@ -112,10 +112,10 @@ server <- function(input, output, session) {
   })
 
   plot_geom2 <- reactive({
-    switch(input$gpaopt2,
+    switch(input$gpaplotchoice,
+    Column = geom_col(),
     Boxplot = geom_boxplot(),
-    Jitterplot = geom_jitter(),
-    Column = geom_col())
+    Jitterplot = geom_jitter(alpha = 0.5))
   })
 
   output$plotdfw <- renderPlot({
@@ -124,8 +124,13 @@ server <- function(input, output, session) {
   }, res = 96)
 
   output$plotgpa <- renderPlot({
-    ggplot(gpa_grouped(), aes(x = .data[[input$gpaopt1]], y = gpa)) +
-      plot_geom2()
+    if (input$gpaplotchoice == "Column") {
+      ggplot(gpa_grouped(), aes(x = .data[[input$gpavar]], y = gpa)) +
+        plot_geom2()
+    } else {
+      ggplot(cleaned_data, aes(x = .data[[input$gpavar]], y = grade_numeric)) +
+        plot_geom2()
+    }
   })
 
   ### Retention Tab ###
