@@ -47,8 +47,7 @@ registrar_weighted <- registrar |>
     )
   )
 
-glimpse(registrar_weighted)
-
+unique(registrar_weighted$major)
 
 
 
