@@ -9,6 +9,8 @@ registrar_weighted <- registrar |>
   separate_longer_delim(person_per_races, delim = ",") |>
   mutate(person_per_races = trimws(person_per_races)) |>
   mutate(student_weight = 1 / race_count) |> 
-  group_by(stc_person, term_reporting_year)
+  group_by(stc_person, term_reporting_year) |>
+  
+
 
 glimpse(registrar_weighted)
