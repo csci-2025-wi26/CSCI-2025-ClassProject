@@ -153,10 +153,11 @@ dfw_rates_gender |>
 #___________________________
 #Probably the most important  plot.
 
+cleaned_data <- read_csv('data/processed/cleaned_data.csv')
 
 dfwDeptMathPro <- cleaned_data |>
   filter(!is.na(students_stu_class), !is.na(dfw),
-          stc_depts %in% "MATPH") |>
+          stc_depts == "MATPH") |>
   ggplot(aes(x = reorder(stc_course_name, dfw), fill = factor(dfw))) +
   geom_bar(position = "fill") +
   geom_hline(
@@ -171,7 +172,6 @@ dfwDeptMathPro <- cleaned_data |>
     "3" = "#E2725B"
   ),
     labels = c("Students with a DFW", "Students who passed")) +
-  scale_x_discrete(labels = cleaned_data$stc_course_name) +
   scale_y_continuous(labels = scales::percent) +
   labs(
     x = "Classes (math department)",
