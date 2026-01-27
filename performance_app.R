@@ -26,9 +26,14 @@ ui <- fluidPage(
           fluidRow(
             column(12,
               selectInput("dfwopt1", "Plot by:", 
-                choices = c("stc_depts", "crs_level", "stc_course_name", "students_stu_class")),
+                choices = c("Departments" = "stc_depts", 
+              "Course Level (1000, 2000, 3000)" = "crs_level", 
+              "Course Name" = "stc_course_name", 
+              "Student Year (Freshman, Sophomore, etc.)" = "students_stu_class")),
               selectInput("dfwopt2", "Select Graph", choices = c("Column")),
-              radioButtons("dfwopt3", "Select Demographic", choices = c("person_gender", "re", "pell"))
+              radioButtons("dfwopt3", "Select Demographic", choices = c("Gender" = "person_gender", 
+    "Race (re)" = "re", 
+    "Pell (Need-based financial aid)" = "pell"))
             )
           ),
           fluidRow(
@@ -41,9 +46,14 @@ ui <- fluidPage(
           fluidRow(
             column(12,
               selectInput("gpavar", "Plot by:",
-                choices = c("stc_depts", "crs_level", "stc_course_name", "students_stu_class")),
+                choices = c("Departments" = "stc_depts", 
+              "Course Level (1000, 2000, 3000)" = "crs_level", 
+              "Course Name" = "stc_course_name", 
+              "Student Year (Freshman, Sophomore, etc.)" = "students_stu_class")),
               selectInput("gpaplotchoice", "Select Graph", choices = c("Column", "Boxplot", "Jitterplot")),
-              radioButtons("gpadem", "Select Demographic", choices = c("person_gender", "re", "pell"))
+              radioButtons("gpadem", "Select Demographic", choices = c("Gender" = "person_gender", 
+    "Race (re)" = "re", 
+    "Pell (Need-based financial aid)" = "pell"))
             )
           ),
           fluidRow(
