@@ -1,0 +1,22 @@
+target_major <- "BIO" 
+
+registrar_weighted |>
+  filter(major == target_major) |> 
+  group_by(term_reporting_year, person_per_races) |>
+  summarise(weighted_count = sum(student_weight, na.rm = TRUE), .groups = "drop") |>
+  ggplot(aes(x = term_reporting_year, 
+             y = weighted_count, 
+             fill = fct_rev(fct_infreq(person_per_races)))) +
+  geom_col() +
+  scale_fill_manual(values = race_map, labels = race_labels) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(family = "Nova Proxima", face = "bold"),
+    axis.title = element_text(family = "Roboto Slab")
+  ) +
+  labs(
+    title = paste("Enrollment Trends for", target_major),
+    x = "Reporting Year",
+    y = "Number of Students",
+    fill = "Race"
+  )
