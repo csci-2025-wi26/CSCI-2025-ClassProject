@@ -63,15 +63,17 @@ cleaned_data <- raw_data |>
           majors <- .x
 
           majors <- case_when(
-            majors %in% c("BUSMDM", "BUMDM") ~ "BUMDM", # Business/Marketing
-            majors %in% c("ACCT", "ACC")     ~ "ACC",   # Accounting
-            majors %in% c("BIOC", "BIOCH")   ~ "BIOCH", # Biochemistry
-            majors %in% c("CSMA", "CSMAS")   ~ "CSMAS", # Computer Science/Math
-            majors %in% c("FINC", "FIN")     ~ "FIN",   # Finance
-            majors %in% c("ARTDS", "ARTDS")  ~ "ARTDES",# Art Design
-            majors %in% c("MATPH", "MATPHY") ~ "MATPHY",# Math Physics
-            majors == "IPE"                  ~ "IPEC",  # IPEC alignment
-            majors == "HEA"                  ~ "HEALTH",# Health alignment
+            majors %in% c("BUSMDM", "BUMDM") ~ "BUMDM",
+            majors %in% c("ACCT", "ACC")     ~ "ACC",
+            majors %in% c("BIOC", "BIOCH")   ~ "BIOCH",
+            majors %in% c("CSMA", "CSMAS")   ~ "CSMAS",
+            majors %in% c("FINC", "FIN")     ~ "FIN",
+            majors %in% c("ARTDS", "ARTDES") ~ "ARTDES", 
+            majors %in% c("MATPH", "MATPHY") ~ "MATPHY",
+            majors == "IPE"                  ~ "IPEC",
+            majors == "HEA"                  ~ "HEALTH",
+            majors == "BIOMD"                ~ "BIO",    
+            majors == "MATCS"                ~ "MAT",    
             TRUE ~ majors
           )
 
@@ -80,7 +82,11 @@ cleaned_data <- raw_data |>
         })
     )
   ) |>
-  mutate(stu_acad_programs = str_replace_all(stu_acad_programs, "BUSMDM", "BUMDM")) |> 
+  mutate(stu_acad_programs = case_when(
+    stu_acad_programs == "BUSMDM" ~ "BUMDM",
+    stu_acad_programs == "BIOMD"  ~ "BIO",
+    TRUE ~ stu_acad_programs
+  )) |> 
   select(-all_of(excluded_cols))
 
 

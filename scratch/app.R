@@ -18,13 +18,14 @@ dept <- outcomes_data |>
 
 majors_by_dept <- outcomes_data |> 
   distinct(stc_person, .keep_all = TRUE) |> 
-  select(acad_dept = stu_acad_programs, major = students_xstu_grad_app_major.x) |>
-  mutate(across(everything(), ~ str_match(., "(\\w+),?")[,2])) |> # get first value
-  filter(!(major %in% c("NON", "NONGR", "OPEN")) & acad_dept %in% dept) |> 
-  group_by(acad_dept) |> 
-  distinct(major) |> 
-  mutate(major = if_else(major != acad_dept & major %in% acad_dept, NA, major)) |> 
-  drop_na(major) |> 
+  select(acad_dept = stu_acad_programs, major = primary_major) |>
+  mutate(
+    acad_dept = str_extract(acad_dept, "^[^,]+"),
+    major     = str_extract(major, "^[^,]+")
+  ) |> 
+  filter(!(major %in% c("NON", "OPEN")) & acad_dept %in% dept) |> 
+  filter(str_detect(major, acad_dept) | major == acad_dept) |> 
+  distinct(acad_dept, major) |> 
   arrange(acad_dept)
 
 outcome_plots <- list(
