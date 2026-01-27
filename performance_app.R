@@ -25,10 +25,10 @@ ui <- fluidPage(
         tabPanel("DFW Rate",
           fluidRow(
             column(12,
-              selectInput("dfwopt1", "Plot by Departments, Course Level, Course Name, or Student Class Standing", 
+              selectInput("dfwopt1", "Plot by:", 
                 choices = c("stc_depts", "crs_level", "stc_course_name", "students_stu_class")),
-              selectInput("dfwopt3", "Choose graph", choices = c("Histogram", "Boxplot", "Jitterplot")),
-              radioButtons("dfwopt2", "Select Demographic", choices = c("person_gender", "re", "pell"))
+              selectInput("dfwopt2", "Select Graph", choices = c("Column")),
+              radioButtons("dfwopt3", "Select Demographic", choices = c("person_gender", "re", "pell"))
             )
           ),
           fluidRow(
@@ -40,13 +40,15 @@ ui <- fluidPage(
         tabPanel("GPA",
           fluidRow(
             column(12,
-              selectInput("gpaopt1", "Plot by Departments, Course Level, Course Name, or Student Class Standing", 
-                choices = c("stc_depts", "crs_level", "stc_course_name", "students_stu_class"))
+              selectInput("gpaopt1", "Plot by:",
+                choices = c("stc_depts", "crs_level", "stc_course_name", "students_stu_class")),
+              selectInput("gpaopt2", "Select Graph", choices = c("Column")),
+              radioButtons("gpaopt3", "Select Demographic", choices = c("person_gender", "re", "pell"))
             )
           ),
           fluidRow(
             column(12,
-              plotOutput("plotq2")
+              plotOutput("plotgpa")
             )
           )
         ),
@@ -56,8 +58,7 @@ ui <- fluidPage(
             )
           ),
           fluidRow(
-            column(12,
-              plotOutput("plotq3")
+            column(12
             )
           )
         )
@@ -94,22 +95,38 @@ server <- function(input, output, session) {
   source("scratch\\performance_global.R")
 
   dfw_rates_grouped <- reactive({cleaned_data |> 
-    group_by(.data[[input$dfwopt1]]) |> 
+    group_by(.data[[input$dfwopt1]]) |>
     summarize(mean(dfw, na.rm = TRUE)) |>
     rename(dfw_rate = 'mean(dfw, na.rm = TRUE)')
   })
+
+  gpa_grouped <- reactive({cleaned_data |> 
+    group_by(.data[[input$gpaopt1]]) |> 
+    summarise(mean(grade_numeric, na.rm = TRUE)) |>
+    rename(gpa = 'mean(grade_numeric, na.rm = TRUE)')
+  })
   
   plot_geom <- reactive({
-    switch(input$dfwopt3,
+    switch(input$dfwopt2,
+    Column = geom_col())
+  })
+
+  plot_geom2 <- reactive({
+    switch(input$gpaopt2,
     Boxplot = geom_boxplot(),
     Jitterplot = geom_jitter(),
-    Histogram = geom_col())
+    Column = geom_col())
   })
 
   output$plotdfw <- renderPlot({
     ggplot(dfw_rates_grouped(), aes(x = .data[[input$dfwopt1]], y = dfw_rate)) + 
       plot_geom() # can't filter by demographic yet
   }, res = 96)
+
+  output$plotgpa <- renderPlot({
+    ggplot(gpa_grouped(), aes(x = .data[[input$gpaopt1]], y = gpa)) +
+      plot_geom2()
+  })
 
   ### Retention Tab ###
   # Retention server stuff goes here!
@@ -119,6 +136,6 @@ server <- function(input, output, session) {
   # Outcomes server stuff goes here!
 
 
-}
+  }
 
 shinyApp(ui, server)
