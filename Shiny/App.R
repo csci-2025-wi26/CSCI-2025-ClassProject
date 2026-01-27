@@ -2,66 +2,65 @@ library(shiny)
 library(bslib)
 library(shinycssloaders)
 library(tidyverse)
-
-ui <- page_fluid(
-  theme = bs_theme(bootswatch = "darkly"),
-  titlePanel("CSCI-2026-Class-Project Homepage"),
-  
-  fluidRow(
-    column(4,
-      wellPanel(
-        h3("Project Features"),
-        navlistPanel(
-          id = "tabset",
-          widths = c(12, 12),
-          tabPanel("Home", value = "home"),
-          tabPanel("Enrollment", value = "enrollment"),
-          tabPanel("Performance", value = "performance"),
-          tabPanel("Outcomes", value = "outcomes"),
-          tabPanel("Retention", value = "retention")
-        )
-      )
+ 
+ui <- fluidPage(
+  titlePanel("CSCI2025 Class Project Dashboard"),
+  navlistPanel(
+    id = "tabset",
+    # This 'Home' tab is an example of how to insert your own inputs/outputs into the boilerplate
+    tabPanel(
+      "Home", # tabPanel display title
+      h3("Welcome!"), # it's all components from here - add as many as you like!
+      p("This serves as the base of what will become our collective Shiny App.\n This home tab includes some example code."),
+      textInput("home_ex_text_in", "Example Input"),
+      textOutput("home_ex_text_out")
     ),
-
-column(8,
-uiOutput("main_display")
+    tabPanel(
+      "Enrollment", 
+      p("Enrollment content goes here!")
+    ),
+    tabPanel(
+      "Performance", 
+      p("Performance content goes here!")
+    ),
+    tabPanel(
+      "Retention", 
+      p("Retention content goes here!")
+    ),
+    tabPanel(
+      "Outcomes", 
+      p("Outcomes content goes here!")
     )
   )
 )
-
+ 
 server <- function(input, output, session) {
-  output$main_display <- renderUI({
-    if (input$tabset == "home") {
-      tagList(
-        h2("Welcome to the Project Dashboard"),
-        p("Select a feature from the sidebar on the left to begin.")
-      )
-    } else if (input$tabset == "enrollment") {
-      tagList(
-        h2("Enrollment Data"),
-        # This is for the enrollment ui person, start writing your code for your tab here
-        p("Put enrollment UI captions or what not.")
-      )
-    } else if (input$tabset == "performance") {
-      tagList(
-        h2("Performance Analysis"),
-        # This is for the performance ui person, start writing your code for your tab here
-        p("Put performance UI captions or what not.")
-      )
-    } else if (input$tabset == "outcomes") {
-      tagList(
-        h2("Student Outcomes"),
-        # This is for the outcomes ui person, start writing your code for your tab here
-        p("Put outcomes UI captions or what not.")
-      )
-    } else if (input$tabset == "retention") {
-      tagList(
-        h2("Retention Rates"),
-        # This is for the retention ui person, start writing your code for your tab here
-        p("Put retention UI captions or what not.")
-      )
-    }
+  ### Home Tab ###
+  home_ex_reactive <- reactive({ # Example reactive component
+    req(input$home_ex_text_in)
+    str_length(input$home_ex_text_in)
   })
+  output$home_ex_text_out <- renderText({ # Example output functionality
+    length <- home_ex_reactive()
+    str_glue("Your text is {length} character(s) long!")
+  })
+
+  ### Enrollment Tab ###
+  # Enrollment server stuff goes here!
+
+
+  ### Performance Tab ###
+  # Performance server stuff goes here!
+
+
+  ### Retention Tab ###
+  # Retention server stuff goes here!
+
+
+  ### Outcomes Tab ###
+  # Outcomes server stuff goes here!
+
+
 }
 
 shinyApp(ui, server)
