@@ -8,6 +8,11 @@ library(scales)
 # outcomes variables
 outcomes_data <- vroom("../data/clean/registrar_cleaned.csv")
 
+outcome_plots <- list(
+  "By major" = c("Status by major" = "status_by_major"),
+  "By demographic" = c("Status by demographic" = "status_by_demographic")
+)
+
 dept <- outcomes_data |> 
   distinct(stc_person, .keep_all = TRUE) |> 
   select(stc_depts) |> 
@@ -28,10 +33,6 @@ majors_by_dept <- outcomes_data |>
   distinct(acad_dept, major) |> 
   arrange(acad_dept)
 
-outcome_plots <- list(
-  "By major" = c("Proportion graduated" = "status_by_major")
-)
-
 status_by_major <- outcomes_data |> 
     select(stc_person, primary_major, term_year, status, stc_depts) |> 
     mutate(
@@ -40,10 +41,7 @@ status_by_major <- outcomes_data |>
       status = if_else(status == "Dropped", "Unenrolled", status),
       status = fct(status, levels = c("Currently Enrolled", "Graduated", "Unenrolled"))
     ) |> 
-    distinct(stc_person, .keep_all = TRUE) |> 
-    group_by(acad_dept, major, term_year) |> 
-    count(status) |> 
-    ungroup()
+    distinct(stc_person, .keep_all = TRUE)
 
 
 ui <- fluidPage(
@@ -180,7 +178,7 @@ server <- function(input, output, session) {
       },
       "status_by_demographic" = {
         prop |> 
-          ggplot(aes(x = as.factor(term_year), fill = status)) +
+          ggplot(aes(x = as.factor(demographic), fill = status)) +
           geom_bar(position = "fill") +
           labs(
            title = sprintf("Student status — %s", input$select_major),
