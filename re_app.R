@@ -11,9 +11,21 @@ ui <- fluidPage(
              helpText("Analysis of GRADUATES only. Shows the % of students who graduated in a department out of all graduates who ever declared it."),
              plotOutput("deptPlot", height = "800px")),
     
-    tabPanel("Recruitment Efficiency (Intro to Major)", 
-             helpText("Analysis of students who took an Intro Course (100-level) in a department and eventually GRADUATED with that major."),
-             plotOutput("introPlot", height = "800px"))
+    tabPanel("Department Retention after Intro Course", 
+             helpText("Analysis of students who continued in the department after an intro class."),
+             plotOutput("introPlot", height = "800px")),
+    tabPanel("Individual Major Lookup",
+             sidebarLayout(
+               sidebarPanel(
+                 selectInput("selectedMajor", 
+                             "Select a Major:", 
+                             choices = sort(unique(retention_data$dept))) # Adjust 'dept' if column name is different
+               ),
+               mainPanel(
+                 plotOutput("majorSpecificPlot")
+               )
+             ))
+
   )
 )
 
@@ -27,6 +39,7 @@ server <- function(input, output) {
       panel.grid.major.y = element_blank()
     )
   
+ # First Chart: Department Retention by Major  
   output$deptPlot <- renderPlot({
     plot_data <- retention_data <- retention_stats |>
       filter(total >= 5) |> 
@@ -59,6 +72,19 @@ server <- function(input, output) {
       geom_text(aes(label = paste0(round(rate, 1), "% (n=", total, ")")), 
                 hjust = -0.1, size = 3.5) +
       ylim(0, 110)
+  })
+  output$majorSpecificPlot <- renderPlot({
+    # Filter the data based on the dropdown selection
+    filtered_data <- retention_data[retention_data$dept == input$selectedMajor, ]
+    
+    ggplot(filtered_data, aes(x = dept, y = retention_rate)) +
+      geom_bar(stat = "identity", fill = "#B22222", width = 0.4) +
+      theme_minimal() +
+      ylim(0, 100) +
+      labs(title = paste("Retention Details:", input$selectedMajor),
+           x = "Department/Major",
+           y = "Retention Rate (%)") +
+      theme(text = element_text(family = "Roboto Slab"))
   })
 }
 
