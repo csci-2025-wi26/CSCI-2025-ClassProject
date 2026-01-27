@@ -63,18 +63,24 @@ cleaned_data <- raw_data |>
           majors <- .x
 
           majors <- case_when(
-            majors == "BUSMDM" ~ "BUMDM",
-            majors == "ACCT"   ~ "ACC",
-            majors == "BIOC"   ~ "BIOCH",
-            majors == "CSMA"   ~ "CSMAS",
-            majors == "FINC"   ~ "FIN",
+            majors %in% c("BUSMDM", "BUMDM") ~ "BUMDM", # Business/Marketing
+            majors %in% c("ACCT", "ACC")     ~ "ACC",   # Accounting
+            majors %in% c("BIOC", "BIOCH")   ~ "BIOCH", # Biochemistry
+            majors %in% c("CSMA", "CSMAS")   ~ "CSMAS", # Computer Science/Math
+            majors %in% c("FINC", "FIN")     ~ "FIN",   # Finance
+            majors %in% c("ARTDS", "ARTDS")  ~ "ARTDES",# Art Design
+            majors %in% c("MATPH", "MATPHY") ~ "MATPHY",# Math Physics
+            majors == "IPE"                  ~ "IPEC",  # IPEC alignment
+            majors == "HEA"                  ~ "HEALTH",# Health alignment
             TRUE ~ majors
           )
 
+          majors <- unique(majors)
           paste(sort(majors), collapse = ",")
         })
     )
   ) |>
+  mutate(stu_acad_programs = str_replace_all(stu_acad_programs, "BUSMDM", "BUMDM")) |> 
   select(-all_of(excluded_cols))
 
 
