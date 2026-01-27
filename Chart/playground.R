@@ -7,7 +7,7 @@ library(dplyr)
 library(stringr)
 library(stringi)
 
-registrar <- read_csv("data/raw/cleaned_registrar_data.csv")
+registrar <- read_csv("CSCI-2025-ClassProject/data/raw/cleaned_registrar_data.csv")
 
 registrar_weighted <- registrar |>
   distinct(stc_person, term_reporting_year, .keep_all = TRUE) |> 
