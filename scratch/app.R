@@ -28,7 +28,7 @@ majors_by_dept <- outcomes_data |>
   arrange(acad_dept)
 
 outcome_plots <- list(
-  "By major" = c("Proportion graduated" = "status_by_major")
+  "By Major" = c("Proportion Graduated" = "status_by_major")
 )
 
 status_by_major <- outcomes_data |> 
@@ -71,20 +71,29 @@ ui <- fluidPage(
     ),
     tabPanel(
       "Outcomes", 
+      fluidRow(column(12,
+        h3("Data Selection Criteria"), # Using h3 for a clean header
+        p("Please use the dropdowns below to choose which graph to see. 
+          You can choose which metric to plot, then further filter by department 
+          as well as each major within that department.", 
+          style = "color: #666; font-style: italic;")
+      )
+      ),
       fluidRow(
         column(3,
-          selectInput("select_plot", "Plot by department", choices = outcome_plots)
+          selectInput("select_plot", "Metric to Plot", choices = outcome_plots)
         ),
         column(3,
           selectInput("select_dept", "Department", choices = dept)
         ),
         column(3,
-          uiOutput("select_major_ui"),
-          uiOutput("select_demographic_ui")
+          uiOutput("select_major_ui")
         )
       ),
       fluidRow(
-        column(12,
+        column(12, 
+          p("The below plot demonstrates the portportion of students in each enrollment status per year.", 
+            style = "font-size: 16px; color: #2c3e50;"),
           plotOutput("dept_major_plot")
         )
       )
