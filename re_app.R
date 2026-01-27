@@ -30,7 +30,20 @@ ui <- fluidPage(
       h4("Drill-Down"),
       helpText("Select a major below to see detailed student pathways in Tab 2."),
       selectInput("selectedMajor", "Select Major:", 
-                  choices = sort(unique(valid_depts$Dept_Code)))
+                  choices = sort(unique(valid_depts$Dept_Code))),
+      
+      # --- MOVED QUICK GUIDE HERE ---
+      br(),
+      wellPanel(
+        h5("Quick Guide:"),
+        tags$ul(
+          tags$li(strong("Top Right:"), " Stars (High Popularity, High Retention)"),
+          tags$li(strong("Bottom Right:"), " Churn (High Popularity, Low Retention)"),
+          tags$li(strong("Top Left:"), " Niche Gems (Small, Dedicated)"),
+          tags$li(strong("Bottom Left:"), " At Risk (Small, Leaky)")
+        ),
+        style = "font-size: 0.9em; color: #555;" # Optional: Makes it look a bit neater in the sidebar
+      )
     ),
     
     mainPanel(
@@ -38,16 +51,8 @@ ui <- fluidPage(
         tabPanel("Retention Landscape (Quadrants)", 
                  br(),
                  p("Visualizing the relationship between Popularity (Total Students) and Success (Retention Rate)."),
-                 plotOutput("landscapePlot", height = "600px", click = "plot_click"),
-                 wellPanel(
-                   h5("Quick Guide:"),
-                   tags$ul(
-                     tags$li(strong("Top Right:"), " Stars (High Popularity, High Retention)"),
-                     tags$li(strong("Bottom Right:"), " Churn (High Popularity, Low Retention)"),
-                     tags$li(strong("Top Left:"), " Niche Gems (Small, Dedicated)"),
-                     tags$li(strong("Bottom Left:"), " At Risk (Small, Leaky)")
-                   )
-                 )
+                 plotOutput("landscapePlot", height = "600px", click = "plot_click")
+                 # --- QUICK GUIDE REMOVED FROM HERE ---
         ),
         
         tabPanel("Student Pathways (Where did they go?)", 
