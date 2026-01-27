@@ -190,4 +190,5 @@ dfwDeptMathPro <- cleaned_data |>
 
 dfwDeptMathPro
 
+
 ggsave("plots/dfw_by_dept_math_proportional.png", plot = dfwDeptMathPro, width = 10, height = 16)
