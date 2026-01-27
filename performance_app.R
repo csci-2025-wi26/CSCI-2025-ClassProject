@@ -78,14 +78,15 @@ ui <- fluidPage(
             )
           )
         ),
-        tabPanel(
+        tabPanel("Experiment",
           fluidRow(
             column(12,
+              selectInput("variable", "Name", choice = c(""))
             )
           ),
           fluidRow(
             column(12,
-              plotOutput()
+              plotOutput("test")
             )
           )
         )
@@ -155,26 +156,24 @@ server <- function(input, output, session) {
     }
   })
 
-  progression_summary_re <- cleaned_data |> 
-  group_by(re, students_stu_class) |> 
-  summarise(
-    avg_gpa = mean(grade_numeric, na.rm = TRUE),    # Tracks performance level
-    gpa_variance = var(grade_numeric, na.rm = TRUE), # Tracks "spread" (inequality within group)
-    .groups = "drop"
-  )
+progression_summary_re |> 
+    filter(!is.na(students_stu_class)) |> 
+    mutate(students_stu_class = factor(students_stu_class, 
+           levels = c("FR", "SO", "JR", "SR"))) |>  # <--- This forces the order
+    group_by(re)
 
   # Create a subset of data for the SINGLE selected line
-  hightlighted_data <- reactive(progression_summary_re |>
-    filter(re == input$revar))
 
   output$plot_re_over_time <- renderPlot({
+      highlighted_data <- progression_summary_re |>
+        filter(re == input$revar)
       ggplot() +
       # Layer 1: Plot ALL lines in light grey (Context)
       geom_line(data = progression_summary_re,
                 aes(x = students_stu_class, y = avg_gpa, group = re), 
                 color = "lightgrey", size = 0.8) +
       # Layer 2: Plot SELECTED line in color (Focus)
-      geom_line(data = highlighted_data(),
+      geom_line(data = highlighted_data,
                 aes(x = students_stu_class, y = avg_gpa, group = re), 
                 color = "#007BC2", size = 1.5) +
       theme_minimal() +
