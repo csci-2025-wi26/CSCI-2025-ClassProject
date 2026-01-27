@@ -79,7 +79,8 @@ ui <- fluidPage(
           selectInput("select_dept", "Department", choices = dept)
         ),
         column(3,
-          uiOutput("select_major_ui")
+          uiOutput("select_major_ui"),
+          uiOutput("select_demographic_ui")
         )
       ),
       fluidRow(
