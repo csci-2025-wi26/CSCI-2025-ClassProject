@@ -23,8 +23,7 @@ majors_by_dept <- outcomes_data |>
     acad_dept = str_extract(acad_dept, "^[^,]+"),
     major     = str_extract(major, "^[^,]+")
   ) |> 
-  filter(!(major %in% c("NON", "OPEN")) & acad_dept %in% dept) |> 
-  filter(str_detect(major, acad_dept) | major == acad_dept) |> 
+  filter(!(major %in% c("NON", "OPEN")) & acad_dept %in% dept) |>  
   distinct(acad_dept, major) |> 
   arrange(acad_dept)
 
