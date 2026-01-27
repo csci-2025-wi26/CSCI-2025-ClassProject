@@ -175,7 +175,33 @@ server <- function(input, output, session) {
             plot.title = element_text(family = "Proxima Nova"),
             text = element_text(family = "Roboto Slab")
           )
-      })
+      },
+      "status_by_demographic" = {
+        prop |> 
+          ggplot(aes(x = as.factor(term_year), fill = status)) +
+          geom_bar(position = "fill") +
+          labs(
+           title = sprintf("Student status — %s", input$select_major),
+            subtitle = "Retention and graduation, by academic year",
+            x = "Academic year",
+            y = "Proportion of students",
+            fill = "Student status"
+          ) +
+          theme_minimal() +
+          scale_y_continuous(labels = scales::percent) +
+          scale_fill_manual(
+            values = c(
+              "Currently Enrolled" = "#533860", 
+              "Graduated" = "#FFF42A", 
+              "Unenrolled" = "#F05155"
+            )
+          ) +
+          theme(
+            plot.title = element_text(family = "Proxima Nova"),
+            text = element_text(family = "Roboto Slab")
+          )
+      }
+    )
   })
 }
 
