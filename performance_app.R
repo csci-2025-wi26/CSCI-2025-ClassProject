@@ -26,15 +26,15 @@ ui <- fluidPage(
         tabPanel("DFW Rate",
           fluidRow(
             column(12,
-              selectInput("dfwopt1", "Plot by:", 
+              selectInput("dfwvar", "Plot by:", 
                 choices = c("Departments" = "stc_depts", 
-              "Course Level (1000, 2000, 3000)" = "crs_level", 
+              "Course Level (1000, 2000, 3000, etc.)" = "crs_level", 
               "Course Name" = "stc_course_name", 
               "Student Year (Freshman, Sophomore, etc.)" = "students_stu_class")),
-              selectInput("dfwopt2", "Select Graph", choices = c("Column")),
-              radioButtons("dfwopt3", "Select Demographic", choices = c("Gender" = "person_gender", 
-    "Race (re)" = "re", 
-    "Pell (Need-based financial aid)" = "pell"))
+              radioButtons("dfwdem", "Select Demographic", choices = c("None" = "NULL",
+                "Gender" = "person_gender", 
+                "Race (re)" = "re", 
+                "Pell (Need-based financial aid)" = "pell"))
             )
           ),
           fluidRow(
@@ -48,13 +48,13 @@ ui <- fluidPage(
             column(12,
               selectInput("gpavar", "Plot by:",
                 choices = c("Departments" = "stc_depts", 
-              "Course Level (1000, 2000, 3000)" = "crs_level", 
+              "Course Level (1000, 2000, 3000, etc.)" = "crs_level", 
               "Course Name" = "stc_course_name", 
               "Student Year (Freshman, Sophomore, etc.)" = "students_stu_class")),
               selectInput("gpaplotchoice", "Select Graph", choices = c("Column", "Boxplot", "Jitterplot")),
               radioButtons("gpadem", "Select Demographic", choices = c("Gender" = "person_gender", 
-    "Race (re)" = "re", 
-    "Pell (Need-based financial aid)" = "pell"))
+                "Race (re)" = "re", 
+                "Pell (Need-based financial aid)" = "pell"))
             )
           ),
           fluidRow(
@@ -122,15 +122,23 @@ server <- function(input, output, session) {
   # Performance server stuff goes here!
   source("scratch\\performance_global.R")
 
-  dfw_rates_grouped <- reactive({cleaned_data |>
-    group_by(.data[[input$dfwvar]], .data[[input$dfwvar]]) |>
-    summarize(mean(dfw, na.rm = TRUE)) |>
-    rename(dfw_rate = 'mean(dfw, na.rm = TRUE)')
+  dfw_rates_grouped <- reactive({
+    if (input$dfwdem == "NULL") {
+      cleaned_data |>
+      group_by(.data[[input$dfwvar]]) |>
+      summarize(mean(dfw, na.rm = TRUE)) |>
+      rename(dfw_rate = 'mean(dfw, na.rm = TRUE)')
+    } else {
+      cleaned_data |>
+      group_by(.data[[input$dfwvar]]) |>
+      summarize(mean(dfw, na.rm = TRUE), .data[[input$dfwdem]]) |>
+      rename(dfw_rate = 'mean(dfw, na.rm = TRUE)')
+    }
   })
 
   gpa_grouped <- reactive({cleaned_data |> 
     group_by(.data[[input$gpavar]]) |> 
-    summarise(mean(grade_numeric, na.rm = TRUE)) |>
+    summarise(mean(grade_numeric, na.rm = TRUE), .data[[input$dfwgpa]]) |>
     rename(gpa = 'mean(grade_numeric, na.rm = TRUE)')
   })
 
@@ -156,28 +164,26 @@ server <- function(input, output, session) {
     }
   })
 
-progression_summary_re |> 
+  progression_factored <- progression_summary_re |> 
     filter(!is.na(students_stu_class)) |> 
     mutate(students_stu_class = factor(students_stu_class, 
-           levels = c("FR", "SO", "JR", "SR"))) |>  # <--- This forces the order
+      levels = c("FR", "SO", "JR", "SR"))) |>  # <--- This forces the order
     group_by(re)
 
-  # Create a subset of data for the SINGLE selected line
-
   output$plot_re_over_time <- renderPlot({
-      highlighted_data <- progression_summary_re |>
-        filter(re == input$revar)
-      ggplot() +
-      # Layer 1: Plot ALL lines in light grey (Context)
-      geom_line(data = progression_summary_re,
-                aes(x = students_stu_class, y = avg_gpa, group = re), 
-                color = "lightgrey", size = 0.8) +
-      # Layer 2: Plot SELECTED line in color (Focus)
-      geom_line(data = highlighted_data,
-                aes(x = students_stu_class, y = avg_gpa, group = re), 
-                color = "#007BC2", size = 1.5) +
-      theme_minimal() +
-      labs(title = paste("Highlighting Line:", input$revar))
+    highlighted_data <- progression_factored |>
+      filter(re == input$revar)
+    ggplot() +
+    # Layer 1: Plot ALL lines in light grey (Context)
+    geom_line(data = progression_factored,
+      aes(x = students_stu_class,y = avg_gpa, group = re), 
+      color = "lightgrey", size = 0.8) +
+    # Layer 2: Plot SELECTED line in color (Focus)
+    geom_line(data = highlighted_data,
+      aes(x = students_stu_class, y = avg_gpa, group = re), 
+      color = "#007BC2", size = 1.5) +
+    theme_minimal() +
+    labs(title = paste("Highlighting Line:", input$revar))
   })
 
   ### Retention Tab ###
