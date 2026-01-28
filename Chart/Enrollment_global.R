@@ -4,7 +4,7 @@ library(bslib)
 library(scales)
 library(extrafont)
 
-registrar <- read_csv("data/raw/cleaned_registrar_data.csv")
+registrar <- read_csv("../data/raw/cleaned_registrar_data.csv")
 
 #registrar_clean <- registrar |>
   #mutate(race_count = str_count(person_per_races, ",") + 1) |>

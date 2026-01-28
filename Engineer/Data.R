@@ -3,7 +3,7 @@ library(dplyr)
 library(stringr)
 library(stringi)
 
-registrar <- read_csv("data/raw/cleaned_registrar_data.csv")
+registrar <- read_csv("./data/raw/cleaned_registrar_data.csv")
 
 registrar_weighted <- registrar |>
   mutate(
@@ -48,6 +48,8 @@ registrar_weighted <- registrar |>
   )
 
 unique(registrar_weighted$major)
+
+glimpse(registrar_weighted)
 
 
 
