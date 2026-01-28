@@ -93,7 +93,8 @@ ui <- fluidPage(
       ),
       fluidRow(
         column(12, 
-          p("The below plot demonstrates the portportion of students in each enrollment status per year.", 
+          p("The below plot demonstrates the portportion of students in 
+            each enrollment status per year within the chosen departments.", 
             style = "font-size: 16px; color: #2c3e50;"),
           plotOutput("dept_major_plot")
         )
