@@ -33,7 +33,7 @@ majors_by_dept <- outcomes_data |>
   distinct(stc_person, .keep_all = TRUE) |>
   select(
     acad_dept = stu_acad_programs,
-    major = students_xstu_grad_app_major.x
+    major = students_xstu_grad_app_major
   ) |>
   mutate(across(everything(), ~ str_match(., "(\\w+),?")[, 2])) |> # get first value
   filter(!(major %in% c("NON", "NONGR", "OPEN")) & acad_dept %in% dept) |>
