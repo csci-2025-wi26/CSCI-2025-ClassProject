@@ -8,6 +8,19 @@ library(scales)
 # outcomes variables
 outcomes_data <- vroom("../data/clean/registrar_cleaned.csv")
 
+outcome_plots <- list(
+  "By major" = c(
+    "Student enrollment status" = "status_by_major",
+    "Years to graduation" = "graduation_by_major",
+    "Major change" = "switch_by_major"
+  ),
+  "By demographic" = c(
+    "Student enrollment status" = "status_by_demographic",
+    "Years to graduation" = "graduation_by_demographic",
+    "Major change" = "switch_by_demographic"
+  )
+)
+
 dept <- outcomes_data |>
   distinct(stc_person, .keep_all = TRUE) |>
   select(stc_depts) |>
@@ -27,17 +40,35 @@ majors_by_dept <- outcomes_data |>
   group_by(acad_dept) |>
   distinct(major) |>
   mutate(
-    major = if_else(major != acad_dept & major %in% acad_dept, NA, major)
+    acad_dept = str_extract(acad_dept, "^[^,]+"),
+    major = str_extract(major, "^[^,]+")
   ) |>
-  drop_na(major) |>
+  filter(!(major %in% c("NON", "OPEN")) & acad_dept %in% dept) |>
+  distinct(acad_dept, major) |>
   arrange(acad_dept)
 
-outcome_plots <- list(
-  "By major" = c("Proportion graduated" = "status_by_major")
-)
+demographic_list <- outcomes_data |>
+  select(race_ethnicity, gender, pell_recipient) |>
+  names()
 
-status_by_major <- outcomes_data |>
-  select(stc_person, primary_major, term_year, status, stc_depts) |>
+titled_demographic_list <- outcomes_data |>
+  select(race_ethnicity, gender, pell_recipient) |>
+  names() |>
+  str_replace("race_ethnicity", "race/ethnicity") |>
+  str_replace("_", " ") |>
+  str_to_title()
+
+filtered_data <- outcomes_data |>
+  distinct(stc_person, .keep_all = TRUE) |>
+  select(
+    # precise_years,
+    primary_major,
+    term_year,
+    status,
+    stc_depts,
+    switched_majors,
+    all_of(demographic_list)
+  ) |>
   mutate(
     acad_dept = str_match(stc_depts, "(\\w+),?")[, 2],
     major = str_extract(primary_major, "^[^,]+"),
@@ -46,12 +77,34 @@ status_by_major <- outcomes_data |>
       status,
       levels = c("Currently Enrolled", "Graduated", "Unenrolled")
     )
-  ) |>
-  distinct(stc_person, .keep_all = TRUE) |>
-  group_by(acad_dept, major, term_year) |>
-  count(status) |>
-  ungroup()
+  )
 
+status_by <- outcomes_data |>
+  distinct(stc_person, .keep_all = TRUE) |>
+  select(
+    primary_major,
+    term_year,
+    status,
+    stc_depts,
+    all_of(demographic_list)
+  ) |>
+  mutate(
+    acad_dept = str_match(stc_depts, "(\\w+),?")[, 2],
+    major = str_extract(primary_major, "^[^,]+"),
+    status = if_else(status == "Dropped", "Unenrolled", status),
+    status = fct(
+      status,
+      levels = c("Currently Enrolled", "Graduated", "Unenrolled")
+    )
+  )
+
+# graduation_by <- outcomes_data |>
+#   distinct(stc_person, .keep_all = TRUE) |>
+#   select(precise_years, primary_major, term_year, stc_depts, all_of(demographic_list)) |>
+#   filter(precise_years > 3) |>
+#   mutate(precise_years = ceiling(precise_years))
+
+demographic_list <- setNames(as.list(demographic_list), titled_demographic_list)
 
 ui <- fluidPage(
   titlePanel("CSCI2025 Class Project Dashboard"),
@@ -81,20 +134,50 @@ ui <- fluidPage(
     ),
     tabPanel(
       "Outcomes",
+      fluidRow(column(
+        12,
+        h3("Data Selection Criteria"), # Using h3 for a clean header
+        p(
+          "Please use the dropdowns below to choose which graph to see. 
+          You can choose which metric to plot, then further filter by department 
+          as well as each major within that department.",
+          style = "color: #666; font-style: italic;"
+        )
+      )),
       fluidRow(
         column(
           3,
           selectInput(
             "select_plot",
-            "Plot by department",
-            choices = outcome_plots
+            "Metric to Plot",
+            choices = outcome_plots,
+            selected = outcome_plots[names(outcome_plots)[1]][1]
           )
         ),
-        column(3, selectInput("select_dept", "Department", choices = dept)),
-        column(3, uiOutput("select_major_ui"))
+        column(
+          3,
+          selectInput(
+            "select_dept",
+            "Department",
+            choices = dept,
+            selected = dept[1]
+          )
+        ),
+        column(
+          3,
+          uiOutput("select_major_ui"),
+          uiOutput("select_demographic_ui")
+        )
       ),
       fluidRow(
-        column(12, plotOutput("dept_major_plot"))
+        column(
+          12,
+          p(
+            "The below plot demonstrates the portportion of students in each enrollment status per year.",
+            style = "font-size: 16px; color: #2c3e50;"
+          ),
+          plotOutput("dept_major_plot")
+        )
       )
     )
   )
@@ -124,6 +207,15 @@ server <- function(input, output, session) {
 
   ### Outcomes Tab ###
   # Outcomes server stuff goes here!
+  demo_col <- reactive({
+    req(input$select_demographic)
+    input$select_demographic
+  })
+
+  demo_name <- reactive({
+    req(input$select_demographic)
+    names(demographic_list)[demographic_list == demo_col()]
+  })
 
   # if plot with major, render major selectors
   output$select_major_ui <- renderUI({
@@ -133,33 +225,52 @@ server <- function(input, output, session) {
       return(NULL)
     }
 
-    dept_majors <- majors_by_dept |>
-      filter(acad_dept == input$select_dept) |>
-      pull(major)
+    if (str_detect(input$select_plot, "switch_by_major")) {
+      choices <- "Entire department"
+    } else {
+      dept_majors <- majors_by_dept |>
+        filter(acad_dept == input$select_dept) |>
+        pull(major)
+
+      choices <- c("Entire department", dept_majors)
+    }
 
     selectInput(
       "select_major",
       "Major",
-      choices = c("Entire department", dept_majors)
+      choices = choices,
+      selected = "Entire department"
+    )
+  })
+
+  output$select_demographic_ui <- renderUI({
+    req(input$select_dept)
+
+    if (!str_detect(input$select_plot, "demographic")) {
+      return(NULL)
+    }
+
+    selectInput(
+      "select_demographic",
+      "Demographic",
+      choices = demographic_list,
+      selected = titled_demographic_list[1]
     )
   })
 
   output$dept_major_plot <- renderPlot({
     #Graduation Proportion for target department over time
-    req(c(input$select_major, input$select_plot))
-    demographic <- reactive({
-      req(input$select_demographic)
-      fct(input$select_demographic)
-    })
+    req(input$select_plot)
+
     switch(
       input$select_plot,
       "status_by_major" = {
+        req(input$select_major)
         if (input$select_major == "Entire department") {
-          prop <- status_by_major |>
-            filter(acad_dept == input$select_dept) |>
-            count(status, term_year)
+          prop <- status_by |>
+            filter(acad_dept == input$select_dept)
         } else {
-          prop <- status_by_major |>
+          prop <- status_by |>
             filter(acad_dept == input$select_dept & major == input$select_major)
         }
 
@@ -187,14 +298,82 @@ server <- function(input, output, session) {
             text = element_text(family = "Roboto Slab")
           )
       },
-      "status_by_demographic" = {
+      "switch_by_major" = {
+        req(input$select_major)
+
+        prop <- filtered_data |>
+          filter(acad_dept == input$select_dept) |>
+          mutate(
+            switched_majors = fct(
+              as.character(switched_majors),
+              levels = c("TRUE", "FALSE")
+            )
+          )
+
         prop |>
-          ggplot(aes(x = as.factor(demographic), fill = status)) +
+          ggplot(aes(x = as.factor(major), fill = switched_majors)) +
           geom_bar(position = "fill") +
           labs(
-            title = sprintf("Student status — %s", input$select_demographic),
-            subtitle = "Retention and graduation, by demographic group",
-            x = "Demographic group",
+            title = sprintf("Major change — %s", input$select_dept),
+            subtitle = "Student major change, by major",
+            x = "Major",
+            y = "Proportion of students",
+            fill = "Major change?"
+          ) +
+          theme_minimal() +
+          scale_y_continuous(labels = scales::percent) +
+          scale_fill_manual(
+            values = c(
+              "FALSE" = "#533860",
+              "TRUE" = "#FFF42A"
+            ),
+            labels = c(
+              "TRUE" = "Major change",
+              "FALSE" = "No major change"
+            )
+          ) +
+          theme(
+            plot.title = element_text(family = "Proxima Nova"),
+            text = element_text(family = "Roboto Slab")
+          )
+      },
+      # "graduation_by_major" = {
+      #   req(input$select_major)
+      #   if(input$select_major == "Entire department") {
+      #     prop <- status_by |>
+      #       filter(acad_dept == input$select_dept)
+      #   } else {
+      #     prop <- status_by |>
+      #       filter(acad_dept == input$select_dept & major == input$select_major)
+      #   }
+
+      #   prop |>
+      #     ggplot(aes(x = fct(precise_years))) +
+      #     geom_bar(fill = "#533860") +
+      #     labs(
+      #      title = sprintf("Years to Graduation — %s", input$select_major),
+      #       subtitle = "Retention and graduation, by years to graduate",
+      #       x = "Years to graduate",
+      #       y = "# of students"
+      #     ) +
+      #     theme_minimal() +
+      #     theme(
+      #       plot.title = element_text(family = "Proxima Nova"),
+      #       text = element_text(family = "Roboto Slab")
+      #     )
+      # },
+      "status_by_demographic" = {
+        req(input$select_demographic)
+        prop <- status_by |>
+          filter(acad_dept == input$select_dept)
+
+        prop |>
+          ggplot(aes(x = .data[[demo_col()]], fill = status)) +
+          geom_bar(position = "fill") +
+          labs(
+            title = sprintf("Student status — %s", demo_name()),
+            subtitle = "Retention and graduation, by demographic",
+            x = "Academic year",
             y = "Proportion of students",
             fill = "Student status"
           ) +
@@ -235,17 +414,62 @@ server <- function(input, output, session) {
             plot.title = element_text(family = "Proxima Nova"),
             text = element_text(family = "Roboto Slab")
           )
+        # },
+        # "graduation_by_demographic" = {
+        #   req(input$select_demographic)
+        #   prop <- status_by |>
+        #     filter(acad_dept == input$select_dept)
+
+        #   prop |>
+        #     ggplot(aes(x = .data[[demo_col()]], fill = fct(precise_years))) +
+        #     geom_bar(position = "fill") +
+        #     labs(
+        #      title = sprintf("Years to Graduation — %s", demo_name()),
+        #       subtitle = sprintf("Years to graduate, by %s", demo_name()),
+        #       x = "Years to graduate",
+        #       y = "Proporation of students"
+        #     ) +
+        #     theme_minimal() +
+        #     scale_y_continuous(labels = scales::percent) +
+        #     theme(
+        #       plot.title = element_text(family = "Proxima Nova"),
+        #       text = element_text(family = "Roboto Slab")
+        #     )
       },
-      "yr_to_grad_by_demographic" = {
+      "switch_by_demographic" = {
+        req(input$select_demographic)
+
+        prop <- filtered_data |>
+          filter(acad_dept == input$select_dept) |>
+          mutate(
+            switched_majors = fct(
+              as.character(switched_majors),
+              levels = c("TRUE", "FALSE")
+            )
+          )
+
         prop |>
-          ggplot(aes(x = demographic, y = years_to_grad)) +
-          geom_col(fill = "#533860") +
+          ggplot(aes(x = .data[[demo_col()]], fill = switched_majors)) +
+          geom_bar(position = "fill") +
           labs(
-            title = "Years to Graduation by demographic",
-            x = "Demographic group",
-            y = "Years to graduate"
+            title = sprintf("Major change — %s", demo_name()),
+            subtitle = "Student major change, by demographic",
+            x = demo_name(),
+            y = "Proportion of students",
+            fill = "Major change?"
           ) +
           theme_minimal() +
+          scale_y_continuous(labels = scales::percent) +
+          scale_fill_manual(
+            values = c(
+              "FALSE" = "#533860",
+              "TRUE" = "#FFF42A"
+            ),
+            labels = c(
+              "TRUE" = "Major changed",
+              "FALSE" = "No major change"
+            )
+          ) +
           theme(
             plot.title = element_text(family = "Proxima Nova"),
             text = element_text(family = "Roboto Slab")

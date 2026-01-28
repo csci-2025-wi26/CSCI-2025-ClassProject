@@ -71,8 +71,7 @@ cleaned_data <- raw_data |>
             majors %in% c("ARTDS", "ARTDES") ~ "ARTDES", 
             majors %in% c("MATPH", "MATPHY") ~ "MATPHY",
             majors == "IPE"                  ~ "IPEC",
-            majors == "HEA"                  ~ "HEALTH",
-            majors == "BIOMD"                ~ "BIO",    
+            majors == "HEA"                  ~ "HEALTH", 
             majors == "MATCS"                ~ "MAT",    
             TRUE ~ majors
           )
@@ -128,11 +127,6 @@ cleaned_data <- cleaned_data |>
     ),
     classes_taken = n()
   ) |>
-  mutate(
-    first_major = first(primary_major, order_by = term_index),
-    last_major  = last(primary_major, order_by = term_index),
-    switched_majors = first_major != last_major
-  ) |>
   ungroup()
 
 cleaned_data <- cleaned_data |>
@@ -168,10 +162,9 @@ major_switched <- cleaned_data |> #col to look at major switching
         if_else(setequal(applied, current), NA, str_flatten_comma(dropped))
       }
     ),
-    switched_majors = if_else(is.na(dropped_majors_list), FALSE, TRUE) # lgl, did switch majors?
-    # .keep = "unused"
-  ) |> 
-  arrange(dropped_majors_list)
+    switched_majors = if_else(is.na(dropped_majors_list), FALSE, TRUE), # lgl, did switch majors?
+    .keep = "unused"
+  )
 
 cleaned_data <- cleaned_data |> 
   left_join(major_switched, join_by(stc_person))
