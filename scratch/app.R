@@ -372,7 +372,7 @@ server <- function(input, output, session) {
           geom_bar(position = "fill") +
           labs(
             title = sprintf("Student status — %s", demo_name()),
-            subtitle = "Retention and graduation, by demographic",
+            subtitle = sprintf("Retention & graduation — %s", demo_name()),
             x = "Academic year",
             y = "Proportion of students",
             fill = "Student status"
@@ -453,7 +453,7 @@ server <- function(input, output, session) {
           geom_bar(position = "fill") +
           labs(
             title = sprintf("Major change — %s", demo_name()),
-            subtitle = "Student major change, by demographic",
+            subtitle = sprintf("Major change — %s", demo_name()),
             x = demo_name(),
             y = "Proportion of students",
             fill = "Major change?"
