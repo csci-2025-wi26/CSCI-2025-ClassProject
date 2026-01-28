@@ -66,7 +66,14 @@ ui <- fluidPage(
           # Row for the Line Chart
           h4("Total Enrollment Trends"),
           plotOutput("enroll_line_plot", height = "300px"),
-         # p("Hristina put your desciprtion here"),
+          p("This dashboard displays student enrollment trends over a five-year period by academic major and race. Users may select a single major or view all majors using the dropdown menu."),
+
+          p("To simplify the visualization, program-specific major codes were consolidated into broader major categories. For example, multiple Business-related codes were grouped under a single Business classification."),
+
+          p("The bar chart presents academic year on the x-axis, enrollment counts on the y-axis, and race as the color encoding. Users may select which racial groups to display."),
+
+          p("Students who identify with multiple races may appear in more than one race category, and students with multiple majors may appear in multiple major views. As a result, counts reflect enrollment occurrences rather than unique individuals."),
+
           br(),
           
           # Row for the Stacked Bar Chart
