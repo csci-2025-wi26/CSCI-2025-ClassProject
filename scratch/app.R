@@ -59,11 +59,11 @@ status_by <- outcomes_data |>
       status = fct(status, levels = c("Currently Enrolled", "Graduated", "Unenrolled"))
     )
 
-graduation_by <- outcomes_data |> 
-  distinct(stc_person, .keep_all = TRUE) |> 
-  select(precise_years, primary_major, term_year, stc_depts, all_of(demographic_list)) |> 
-  filter(precise_years > 3) |> 
-  mutate(precise_years = ceiling(precise_years))
+# graduation_by <- outcomes_data |> 
+#   distinct(stc_person, .keep_all = TRUE) |> 
+#   select(precise_years, primary_major, term_year, stc_depts, all_of(demographic_list)) |> 
+#   filter(precise_years > 3) |> 
+#   mutate(precise_years = ceiling(precise_years))
 
 demographic_list <- setNames(as.list(demographic_list), titled_demographic_list)
 
@@ -228,30 +228,30 @@ server <- function(input, output, session) {
             text = element_text(family = "Roboto Slab")
           )
       },
-      "graduation_by_major" = {
-        if(input$select_major == "Entire department") {
-          prop <- status_by |> 
-            filter(acad_dept == input$select_dept)
-        } else {
-          prop <- status_by |> 
-            filter(acad_dept == input$select_dept & major == input$select_major)
-        }
+      # "graduation_by_major" = {
+      #   if(input$select_major == "Entire department") {
+      #     prop <- status_by |> 
+      #       filter(acad_dept == input$select_dept)
+      #   } else {
+      #     prop <- status_by |> 
+      #       filter(acad_dept == input$select_dept & major == input$select_major)
+      #   }
 
-        prop |> 
-          ggplot(aes(x = as.factor(precise_years))) +
-          geom_bar(fill = "#533860") +
-          labs(
-           title = sprintf("Years to Graduation — %s", input$select_major),
-            subtitle = "Retention and graduation, by years to graduate",
-            x = "Years to graduate",
-            y = "# of students"
-          ) +
-          theme_minimal() +
-          theme(
-            plot.title = element_text(family = "Proxima Nova"),
-            text = element_text(family = "Roboto Slab")
-          )
-      },
+      #   prop |> 
+      #     ggplot(aes(x = as.factor(precise_years))) +
+      #     geom_bar(fill = "#533860") +
+      #     labs(
+      #      title = sprintf("Years to Graduation — %s", input$select_major),
+      #       subtitle = "Retention and graduation, by years to graduate",
+      #       x = "Years to graduate",
+      #       y = "# of students"
+      #     ) +
+      #     theme_minimal() +
+      #     theme(
+      #       plot.title = element_text(family = "Proxima Nova"),
+      #       text = element_text(family = "Roboto Slab")
+      #     )
+      # },
       "status_by_demographic" = {        
         prop <- status_by |> 
           filter(acad_dept == input$select_dept)
@@ -279,26 +279,26 @@ server <- function(input, output, session) {
             plot.title = element_text(family = "Proxima Nova"),
             text = element_text(family = "Roboto Slab")
           )
-      }, 
-      "graduation_by_demographic" = {
-        prop <- status_by |> 
-          filter(acad_dept == input$select_dept)
+      # }, 
+      # "graduation_by_demographic" = {
+      #   prop <- status_by |> 
+      #     filter(acad_dept == input$select_dept)
 
-        prop |> 
-          ggplot(aes(x = .data[[demo_col]], fill = precise_years)) +
-          geom_bar(position = "fill") +
-          labs(
-           title = sprintf("Years to Graduation — %s", names(demographic_list)[demographic_list == demo_col]),
-            subtitle = sprintf("Years to graduate, by %s", names(demographic_list)[demographic_list == demo_col]),
-            x = "Years to graduate",
-            y = "Proporation of students"
-          ) +
-          theme_minimal() +
-          scale_y_continuous(labels = scales::percent) +
-          theme(
-            plot.title = element_text(family = "Proxima Nova"),
-            text = element_text(family = "Roboto Slab")
-          )
+      #   prop |> 
+      #     ggplot(aes(x = .data[[demo_col]], fill = precise_years)) +
+      #     geom_bar(position = "fill") +
+      #     labs(
+      #      title = sprintf("Years to Graduation — %s", names(demographic_list)[demographic_list == demo_col]),
+      #       subtitle = sprintf("Years to graduate, by %s", names(demographic_list)[demographic_list == demo_col]),
+      #       x = "Years to graduate",
+      #       y = "Proporation of students"
+      #     ) +
+      #     theme_minimal() +
+      #     scale_y_continuous(labels = scales::percent) +
+      #     theme(
+      #       plot.title = element_text(family = "Proxima Nova"),
+      #       text = element_text(family = "Roboto Slab")
+      #     )
       }
     )
   })
