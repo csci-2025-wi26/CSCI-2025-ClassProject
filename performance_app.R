@@ -195,13 +195,11 @@ server <- function(input, output, session) {
     labs(title = paste("Highlighting Line:", input$revar))
   })
 
-  output$dfwtext <- renderText({"Stuff about dfw plot goes here"})
+  output$dfwtext <- renderText({"The outcome variable (DFW rate) is plotted on the y-axis, and the selected “Plot by” category is shown on the x-axis. Each graph reflects the data for the selected demographic group (e.g., Gender, Race, or Pell)."})
 
-  output$gpatext <- renderText({"Stuff about gpa plot goes here. Might need to
-    use if statements to change text output depending on plot and variables chosen"})
+  output$gpatext <- renderText({"The outcome variable (GPA) is plotted on the y-axis, and the selected “Plot by” category is shown on the x-axis. Each graph reflects the data for the selected demographic group (e.g., Gender, Race, or Pell)."})
   
-  output$timetext <- renderText({"More text output that I will leave Aayush to take
-    care of if he doesn't mind"})
+  output$timetext <- renderText({"The outcome variable (GPA over Time) is plotted on the y-axis, and the students standing year is shown on the x-axis. Each graph reflects the data for the selected race( e.g.,Asian, American, Hispanic, unknown etc). "})
 
   ### Retention Tab ###
   # Retention server stuff goes here!
