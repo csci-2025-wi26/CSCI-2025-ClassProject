@@ -9,8 +9,14 @@ library(scales)
 outcomes_data <- vroom("../data/clean/registrar_cleaned.csv")
 
 outcome_plots <- list(
-  "By major" = c("Status by major" = "status_by_major"),
-  "By demographic" = c("Status by demographic" = "status_by_demographic")
+  "By major" = c(
+    "Status by major" = "status_by_major",
+    "Years to graduation" = "graduation_by_major"
+  ),
+  "By demographic" = c(
+    "Status" = "status_by_demographic",
+    "Years to graduation" = "graduation_by_demographic"
+  )
 )
 
 dept <- outcomes_data |> 
@@ -44,14 +50,20 @@ titled_demographic_list <- outcomes_data |>
   str_to_title()
 
 status_by <- outcomes_data |> 
-    select(stc_person, primary_major, term_year, status, stc_depts, all_of(demographic_list)) |> 
+    distinct(stc_person, .keep_all = TRUE) |> 
+    select(primary_major, term_year, status, stc_depts, all_of(demographic_list)) |> 
     mutate(
       acad_dept = str_match(stc_depts, "(\\w+),?")[,2], 
       major = str_extract(primary_major, "^[^,]+"),
       status = if_else(status == "Dropped", "Unenrolled", status),
       status = fct(status, levels = c("Currently Enrolled", "Graduated", "Unenrolled"))
-    ) |> 
-    distinct(stc_person, .keep_all = TRUE)
+    )
+
+graduation_by <- outcomes_data |> 
+  distinct(stc_person, .keep_all = TRUE) |> 
+  select(precise_years, primary_major, term_year, stc_depts, all_of(demographic_list)) |> 
+  filter(precise_years > 3) |> 
+  mutate(precise_years = ceiling(precise_years))
 
 demographic_list <- setNames(as.list(demographic_list), titled_demographic_list)
 
@@ -137,7 +149,7 @@ server <- function(input, output, session) {
 
   ### Outcomes Tab ###
   # Outcomes server stuff goes here!
-  demographic <- reactive({
+  demo_col <- reactive({
     req(input$select_demographic)
     input$select_demographic
   })
@@ -216,9 +228,31 @@ server <- function(input, output, session) {
             text = element_text(family = "Roboto Slab")
           )
       },
-      "status_by_demographic" = {
-        demo_col <- input$select_demographic
-        
+      "graduation_by_major" = {
+        if(input$select_major == "Entire department") {
+          prop <- status_by |> 
+            filter(acad_dept == input$select_dept)
+        } else {
+          prop <- status_by |> 
+            filter(acad_dept == input$select_dept & major == input$select_major)
+        }
+
+        prop |> 
+          ggplot(aes(x = as.factor(precise_years))) +
+          geom_bar(fill = "#533860") +
+          labs(
+           title = sprintf("Years to Graduation — %s", input$select_major),
+            subtitle = "Retention and graduation, by years to graduate",
+            x = "Years to graduate",
+            y = "# of students"
+          ) +
+          theme_minimal() +
+          theme(
+            plot.title = element_text(family = "Proxima Nova"),
+            text = element_text(family = "Roboto Slab")
+          )
+      },
+      "status_by_demographic" = {        
         prop <- status_by |> 
           filter(acad_dept == input$select_dept)
 
@@ -227,7 +261,7 @@ server <- function(input, output, session) {
           geom_bar(position = "fill") +
           labs(
            title = sprintf("Student status — %s", names(demographic_list)[demographic_list == demo_col]),
-            subtitle = "Retention and graduation, by academic year",
+            subtitle = "Retention and graduation, by demographic",
             x = "Academic year",
             y = "Proportion of students",
             fill = "Student status"
@@ -241,6 +275,26 @@ server <- function(input, output, session) {
               "Unenrolled" = "#F05155"
             )
           ) +
+          theme(
+            plot.title = element_text(family = "Proxima Nova"),
+            text = element_text(family = "Roboto Slab")
+          )
+      }, 
+      "graduation_by_demographic" = {
+        prop <- status_by |> 
+          filter(acad_dept == input$select_dept)
+
+        prop |> 
+          ggplot(aes(x = .data[[demo_col]], fill = precise_years)) +
+          geom_bar(position = "fill") +
+          labs(
+           title = sprintf("Years to Graduation — %s", names(demographic_list)[demographic_list == demo_col]),
+            subtitle = sprintf("Years to graduate, by %s", names(demographic_list)[demographic_list == demo_col]),
+            x = "Years to graduate",
+            y = "Proporation of students"
+          ) +
+          theme_minimal() +
+          scale_y_continuous(labels = scales::percent) +
           theme(
             plot.title = element_text(family = "Proxima Nova"),
             text = element_text(family = "Roboto Slab")
