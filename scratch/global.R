@@ -169,101 +169,26 @@ major_switched <- cleaned_data |> #col to look at major switching
 cleaned_data <- cleaned_data |> 
   left_join(major_switched, join_by(stc_person))
 
+graduation_year_data <- cleaned_data |>
+  group_by(stc_person) |>
+  mutate(
+    entry_year      = min(term_reporting_year, na.rm = TRUE),
+    
+    years_to_grad   = grad_year - entry_year + 1,
+    
+    years_to_grad   = if_else(years_to_grad < 0, NA_real_, years_to_grad),
+    
+    precise_years   = if_else(!is.na(grad_year), 
+                            first(grad_year) - first(start_term_index), 
+                            NA_real_),
+    precise_years   = if_else(precise_years < 0, NA_real_, precise_years)
+  ) |> 
+  select(stc_person, years_to_grad, precise_years)
+
+cleaned_data <- cleaned_data |> 
+  left_join(graduation_year_data, join_by(stc_person))
+
 write_csv(
   cleaned_data,
   "data/clean/registrar_cleaned.csv"
 )
-
-by_gender <- cleaned_data |>
-  group_by(race_ethnicity) |>
-  filter(status == "Dropped" | status == "Currently Enrolled") |> 
-  mutate(
-    prop_grad = mean(if_else(status == "Dropped", 0, 1)),
-    .after = status
-  ) |>
-  relocate(race_ethnicity, .after = prop_grad) |>
-  arrange(race_ethnicity) |>
-  mutate(
-    race_ethnicity = factor(
-      race_ethnicity,
-      levels = sort(unique(race_ethnicity))
-    )
-  ) |>
-  mutate(race_ethnicity = fct_rev(race_ethnicity))
-
-#Proportion of graduated students by race/ethnicity bar chart
-ggplot(by_gender, aes(race_ethnicity, prop_grad)) +
-  geom_col(fill = "#533860") +
-  coord_flip() +
-  labs(
-    title = "Proportion graduated — Race / Ethnicity",
-    subtitle = "Graduation rate by race and ethnicity",
-    x = "Race / ethnicity",
-    y = "Share of students (proportion)"
-  ) +
-  theme_minimal() +
-  theme(
-    plot.title = element_text(family = "Proxima Nova"),
-    text = element_text(family = "Roboto Slab")
-  )
-
-student_year_summary <- cleaned_data |> 
-  mutate(dept = str_extract(primary_major, "^[^,]+")) |> 
-  group_by(stc_person, term_year) |> 
-  mutate(
-    dept = first(dept),
-    .groups = "drop"
-  )
-
-#Graduation Proportion for target department over time
-target_dept <- "PSY" # we can handle select for department over time
-student_year_summary |> 
-  filter(status != "Currently Enrolled" & dept == target_dept) |> 
-  ggplot(aes(x = as.factor(term_year), fill = status)) +
-  geom_bar(position = "fill") +
-  labs(
-    title = sprintf("Student status — %s", target_dept),
-    subtitle = "Retention and graduation, by academic year",
-    x = "Academic year",
-    y = "Share of students (proportion)",
-    fill = "Graduation status"
-  ) +
-  theme_minimal() +
-  scale_fill_manual(
-    values = c("Dropped" = "#533860", "Graduated" = "#FFF42A"),
-    labels = c("Dropped", "Graduated")
-  ) +
-  theme(
-    plot.title = element_text(family = "Proxima Nova"),
-    text = element_text(family = "Roboto Slab")
-  )
-
-graduation_year_data <- cleaned_data |>
-  group_by(stc_person) |>
-  summarize(
-    final_grad_year = first(grad_year),
-    entry_year      = min(term_year, na.rm = TRUE),
-    
-    years_to_grad   = final_grad_year - entry_year,
-    
-    years_to_grad   = if_else(years_to_grad < 0, 0, years_to_grad),
-    
-    precise_years   = if_else(!is.na(final_grad_year), 
-                            first(grad_year) - first(start_term_index), 
-                            NA_real_),
-    precise_years   = if_else(precise_years < 0, 0, precise_years),
-    
-    grad_speed_category = case_when(
-      years_to_grad <= 2 ~ "Transfer (0-2 yrs)",
-      years_to_grad == 3 ~ "Early Grad (3 yrs)",
-      years_to_grad == 4 ~ "Traditional (4 yrs)",
-      years_to_grad > 4  ~ "Extended (5+ yrs)"
-    ),
-    
-    race   = first(race_ethnicity),
-    gender = first(gender),
-    .groups = "drop"
-  ) |> 
-  filter(!is.na(years_to_grad))
-
-glimpse(graduation_year_data)
