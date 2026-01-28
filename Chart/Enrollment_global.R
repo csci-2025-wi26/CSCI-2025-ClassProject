@@ -4,7 +4,7 @@ library(bslib)
 library(scales)
 library(extrafont)
 
-registrar <- read_csv("data/raw/cleaned_registrar_data.csv")
+registrar <- read_csv("../data/raw/cleaned_registrar_data.csv")
 
 #registrar_clean <- registrar |>
   #mutate(race_count = str_count(person_per_races, ",") + 1) |>
@@ -26,7 +26,6 @@ library(tidyverse)
   #group_by(stc_person, term_reporting_year)
 
 registrar_weighted <- registrar |>
-
   # This removes the duplicate rows caused by taking multiple classes
   distinct(stc_person, term_reporting_year, .keep_all = TRUE) |> 
 
@@ -36,32 +35,12 @@ registrar_weighted <- registrar |>
   mutate(student_weight = 1 / race_count) |> 
   group_by(stc_person, term_reporting_year)
 
+major_CSI <- registrar_weighted |>
+  filter(students_xstu_grad_app_major == "CSCI")
 
-race_labels <- c(
-  "AN" = "American Indian", 
-  "AS" = "Asian",
-  "BL" = "Black", 
-  "HP" = "Hawaiian or Pacific Islander",
-  "ME" = "Mexican",
-  "WH" = "White",
-  "NA" = "Not Listed"
-)
 
-race_map <- c(
-  "WH" = "#6A5ACD",
-  "ME" = "#000080",
-  "AS" = "#00BFFF",
-  "BL" = "#E2725B",
-  "AN" = "#228B22",
-  "HP" = "#008080",
-  "NA" = "#FF7F50"
-)
-
-ggplot(data = registrar_weighted, aes(x = term_reporting_year, y = student_weight, fill = fct_rev(fct_infreq((person_per_races))))) +
+ggplot(data = major_CSI, aes(x = term_reporting_year, y = student_weight)) +
   geom_col() +
-  scale_fill_manual(
-  values = race_map,
-  labels = race_labels) +
   theme_minimal() +
   theme(
     plot.title = element_text(family = "Nova Proxima", face = "bold"),
@@ -69,8 +48,7 @@ ggplot(data = registrar_weighted, aes(x = term_reporting_year, y = student_weigh
   labs(
     title = "Student Enrollment Per Year by Major",
     x = "Reporting Year",
-    y = "Count",
-    fill = "Race"
+    y = "Count"
   ) +
   scale_y_continuous(labels = label_comma())
   
