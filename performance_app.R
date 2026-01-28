@@ -25,7 +25,7 @@ ui <- fluidPage(
       tabsetPanel(
         tabPanel("DFW Rate",
           fluidRow(
-            column(12,
+            column(6,
               selectInput("dfwvar", "Plot by:", 
                 choices = c("Departments" = "stc_depts", 
               "Course Level (1000, 2000, 3000, etc.)" = "crs_level", 
@@ -35,6 +35,9 @@ ui <- fluidPage(
                 "Gender" = "person_gender", 
                 "Race (re)" = "re", 
                 "Pell (Need-based financial aid)" = "pell"))
+            ),
+            column(6,
+              textOutput("dfwtext")
             )
           ),
           fluidRow(
@@ -45,7 +48,7 @@ ui <- fluidPage(
         ),
         tabPanel("GPA",
           fluidRow(
-            column(12,
+            column(6,
               selectInput("gpavar", "Plot by:",
                 choices = c("Departments" = "stc_depts", 
               "Course Level (1000, 2000, 3000, etc.)" = "crs_level", 
@@ -55,6 +58,9 @@ ui <- fluidPage(
               radioButtons("gpadem", "Select Demographic", choices = c("Gender" = "person_gender", 
                 "Race (re)" = "re", 
                 "Pell (Need-based financial aid)" = "pell"))
+            ),
+            column(6,
+              textOutput("gpatext")
             )
           ),
           fluidRow(
@@ -65,11 +71,14 @@ ui <- fluidPage(
         ),
         tabPanel("GPA Over Time",
           fluidRow(
-            column(12,
+            column(6,
               selectInput("revar", "Choose Race",
               choices = c("American Indian or Alaska Native", "Asian", "Black or African American",
                 "Hispanic/Latino", "Native Hawaiian or Other Pacific Islander", "Nonresident alien",
                 "Race or ethnicity unknown", "Two or more races", "White"))
+            ),
+            column(6,
+              textOutput("timetext")
             )
           ),
           fluidRow(
@@ -186,6 +195,14 @@ server <- function(input, output, session) {
     labs(title = paste("Highlighting Line:", input$revar))
   })
 
+  output$dfwtext <- renderText({"Stuff about dfw plot goes here"})
+
+  output$gpatext <- renderText({"Stuff about gpa plot goes here. Might need to
+    use if statements to change text output depending on plot and variables chosen"})
+  
+  output$timetext <- renderText({"More text output that I will leave Aayush to take
+    care of if he doesn't mind"})
+
   ### Retention Tab ###
   # Retention server stuff goes here!
 
@@ -194,6 +211,6 @@ server <- function(input, output, session) {
   # Outcomes server stuff goes here!
 
 
-  }
+}
 
 shinyApp(ui, server)
