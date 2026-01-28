@@ -147,7 +147,7 @@ server <- function(input, output, session) {
 
   gpa_grouped <- reactive({cleaned_data |> 
     group_by(.data[[input$gpavar]]) |> 
-    summarise(mean(grade_numeric, na.rm = TRUE), .data[[input$dfwgpa]]) |>
+    summarise(mean(grade_numeric, na.rm = TRUE)) |>
     rename(gpa = 'mean(grade_numeric, na.rm = TRUE)')
   })
 
