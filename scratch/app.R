@@ -168,6 +168,11 @@ server <- function(input, output, session) {
     input$select_demographic
   })
 
+  demo_name <- reactive({
+    req(input$select_demographic)
+    names(demographic_list)[demographic_list == demo_col()]
+  })
+
   # if plot with major, render major selectors
   output$select_major_ui <- renderUI({
     req(input$select_dept)
@@ -262,11 +267,11 @@ server <- function(input, output, session) {
           ggplot(aes(x = as.factor(major), fill = switched_majors)) +
           geom_bar(position = "fill") +
           labs(
-           title = sprintf("Major switching — %s", input$select_dept),
-            subtitle = "Student major switching, by major",
+           title = sprintf("Major change — %s", input$select_dept),
+            subtitle = "Student major change, by major",
             x = "Major",
             y = "Proportion of students",
-            fill = "Switched?"
+            fill = "Major change?"
           ) +
           theme_minimal() +
           scale_y_continuous(labels = scales::percent) +
@@ -276,8 +281,8 @@ server <- function(input, output, session) {
               "TRUE" = "#FFF42A"
             ),
             labels = c(
-              "TRUE" = "Yes",
-              "FALSE" = "No"
+              "TRUE" = "Major change",
+              "FALSE" = "No major change"
             )
           ) +
           theme(
@@ -319,7 +324,7 @@ server <- function(input, output, session) {
           ggplot(aes(x = .data[[demo_col()]], fill = status)) +
           geom_bar(position = "fill") +
           labs(
-           title = sprintf("Student status — %s", names(demographic_list)[demographic_list == demo_col()]),
+           title = sprintf("Student status — %s", demo_name()),
             subtitle = "Retention and graduation, by demographic",
             x = "Academic year",
             y = "Proportion of students",
@@ -348,8 +353,8 @@ server <- function(input, output, session) {
       #     ggplot(aes(x = .data[[demo_col()]], fill = fct(precise_years))) +
       #     geom_bar(position = "fill") +
       #     labs(
-      #      title = sprintf("Years to Graduation — %s", names(demographic_list)[demographic_list == demo_col()]),
-      #       subtitle = sprintf("Years to graduate, by %s", names(demographic_list)[demographic_list == demo_col()]),
+      #      title = sprintf("Years to Graduation — %s", demo_name()),
+      #       subtitle = sprintf("Years to graduate, by %s", demo_name()),
       #       x = "Years to graduate",
       #       y = "Proporation of students"
       #     ) +
@@ -359,6 +364,42 @@ server <- function(input, output, session) {
       #       plot.title = element_text(family = "Proxima Nova"),
       #       text = element_text(family = "Roboto Slab")
       #     )
+      },
+      "switch_by_demographic" = {
+        req(input$select_demographic)
+
+        prop <- filtered_data |> 
+          filter(acad_dept == input$select_dept) |> 
+          mutate(
+            switched_majors = fct(as.character(switched_majors), levels = c("TRUE", "FALSE"))
+          )
+
+        prop |> 
+          ggplot(aes(x = .data[[demo_col()]], fill = switched_majors)) +
+          geom_bar(position = "fill") +
+          labs(
+           title = sprintf("Major change — %s", demo_name()),
+            subtitle = "Student major change, by demographic",
+            x = demo_name(),
+            y = "Proportion of students",
+            fill = "Major change?"
+          ) +
+          theme_minimal() +
+          scale_y_continuous(labels = scales::percent) +
+          scale_fill_manual(
+            values = c(
+              "FALSE" = "#533860", 
+              "TRUE" = "#FFF42A"
+            ),
+            labels = c(
+              "TRUE" = "Major changed",
+              "FALSE" = "No major change"
+            )
+          ) +
+          theme(
+            plot.title = element_text(family = "Proxima Nova"),
+            text = element_text(family = "Roboto Slab")
+          )
       }
     )
   })
