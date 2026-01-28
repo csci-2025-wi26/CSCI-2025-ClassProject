@@ -35,16 +35,68 @@ majors_by_dept <- outcomes_data |>
     acad_dept = stu_acad_programs,
     major = students_xstu_grad_app_major
   ) |>
-  mutate(across(everything(), ~ str_match(., "(\\w+),?")[, 2])) |> # get first value
-  filter(!(major %in% c("NON", "NONGR", "OPEN")) & acad_dept %in% dept) |>
-  group_by(acad_dept) |>
-  distinct(major) |>
-  mutate(
-    acad_dept = str_extract(acad_dept, "^[^,]+"),
-    major = str_extract(major, "^[^,]+")
+  filter(
+    !(major %in% c("NON", "NONGR", "OPEN")) & 
+    !str_detect(major, ",") & 
+    !str_detect(acad_dept, ",")
   ) |>
-  filter(!(major %in% c("NON", "OPEN")) & acad_dept %in% dept) |>
-  distinct(acad_dept, major) |>
+  add_row(acad_dept = "ATHSOC", major = "SOC") |> 
+  mutate(
+    acad_dept = case_when(
+      acad_dept %in% c("ATH", "SOC")                      ~ "ATHSOC",
+      acad_dept == "ARTDES"                               ~ "ART",
+      acad_dept %in% c("BUS", "ACCT")                     ~ "BUSACCT",
+      acad_dept %in% c("CSC", "MAT", "MATCSC", "MATPHY")  ~ "MAPS",
+      acad_dept %in% c("EXPH", "EXCSI", "HEALTH", "HPER") ~ "HPER",
+      acad_dept %in% c("IPEC", "POE")                     ~ "POE",
+      TRUE                                                ~ acad_dept
+    ),
+    major = case_when(
+      major %in% c("ATH", "SOC")   ~ "ATHSOC",
+      major == "ENVST"             ~ "ENVSTU",
+      major == "EDIND"             ~ "EDINDE",
+      TRUE                         ~ major
+    )
+  ) |> 
+  distinct(acad_dept, major) |> 
+  arrange(acad_dept)
+
+missing_majors <- tibble(
+  acad_dept = c(
+    "ATHSOC", 
+    "BUSACCT", 
+    "BUSACCT", 
+    "BUSACCT", 
+    "CHE", 
+    "CHE", 
+    "COMM", 
+    "EDU", 
+    "EDU",
+    "EDU",
+    "EDU",
+    "EDU",
+    "EDU",
+    "MAPS"
+  ),
+  major = c(
+    "CRIM", 
+    "FIN", 
+    "SLBUS", 
+    "MKTG", 
+    "BIOCHE", 
+    "APPCHE", 
+    "COMM", 
+    "BIOED", 
+    "ELEMED",
+    "ENGED",
+    "HISED",
+    "MATED",
+    "MUSED",
+    "PREENG"
+  )
+)
+
+majors_by_dept <- bind_rows(missing_majors, majors_by_dept) |> 
   arrange(acad_dept)
 
 demographic_list <- outcomes_data |>
@@ -61,7 +113,7 @@ titled_demographic_list <- outcomes_data |>
 filtered_data <- outcomes_data |>
   distinct(stc_person, .keep_all = TRUE) |>
   select(
-    # precise_years,
+    precise_years,
     primary_major,
     term_year,
     status,
@@ -73,36 +125,28 @@ filtered_data <- outcomes_data |>
     acad_dept = str_match(stc_depts, "(\\w+),?")[, 2],
     major = str_extract(primary_major, "^[^,]+"),
     status = if_else(status == "Dropped", "Unenrolled", status),
-    status = fct(
+    status = factor(
       status,
       levels = c("Currently Enrolled", "Graduated", "Unenrolled")
-    )
+    ),
+    race_ethnicity = case_when(
+      race_ethnicity == "Nonresident alien"                         ~ "Nonresident",
+      race_ethnicity == "Race and ethnicity unknown"                ~ NA_character_,
+      race_ethnicity == "Hispanic/Latino"                           ~ "Latinx",
+      race_ethnicity == "Two or more races"                         ~ "Multiple races",
+      race_ethnicity == "American Indian or Alaska Native"          ~ "Indigenous",
+      race_ethnicity == "Black or African American"                 ~ "Black",
+      race_ethnicity == "Native Hawaiian or Other Pacific Islander" ~ "Pacific Islander",
+      TRUE                                                          ~ race_ethnicity
+    ),
+    race_ethnicity = factor(race_ethnicity),
+    .keep = "unused"
   )
 
-status_by <- outcomes_data |>
-  distinct(stc_person, .keep_all = TRUE) |>
-  select(
-    primary_major,
-    term_year,
-    status,
-    stc_depts,
-    all_of(demographic_list)
-  ) |>
-  mutate(
-    acad_dept = str_match(stc_depts, "(\\w+),?")[, 2],
-    major = str_extract(primary_major, "^[^,]+"),
-    status = if_else(status == "Dropped", "Unenrolled", status),
-    status = fct(
-      status,
-      levels = c("Currently Enrolled", "Graduated", "Unenrolled")
-    )
-  )
-
-# graduation_by <- outcomes_data |>
-#   distinct(stc_person, .keep_all = TRUE) |>
-#   select(precise_years, primary_major, term_year, stc_depts, all_of(demographic_list)) |>
-#   filter(precise_years > 3) |>
-#   mutate(precise_years = ceiling(precise_years))
+graduation_by <- filtered_data |>
+  drop_na(precise_years) |> 
+  filter(status == "Graduated") |>
+  mutate(precise_years = ceiling(precise_years))
 
 demographic_list <- setNames(as.list(demographic_list), titled_demographic_list)
 
@@ -267,10 +311,10 @@ server <- function(input, output, session) {
       "status_by_major" = {
         req(input$select_major)
         if (input$select_major == "Entire department") {
-          prop <- status_by |>
+          prop <- filtered_data |>
             filter(acad_dept == input$select_dept)
         } else {
-          prop <- status_by |>
+          prop <- filtered_data |>
             filter(acad_dept == input$select_dept & major == input$select_major)
         }
 
@@ -304,7 +348,7 @@ server <- function(input, output, session) {
         prop <- filtered_data |>
           filter(acad_dept == input$select_dept) |>
           mutate(
-            switched_majors = fct(
+            switched_majors = factor(
               as.character(switched_majors),
               levels = c("TRUE", "FALSE")
             )
@@ -337,35 +381,41 @@ server <- function(input, output, session) {
             text = element_text(family = "Roboto Slab")
           )
       },
-      # "graduation_by_major" = {
-      #   req(input$select_major)
-      #   if(input$select_major == "Entire department") {
-      #     prop <- status_by |>
-      #       filter(acad_dept == input$select_dept)
-      #   } else {
-      #     prop <- status_by |>
-      #       filter(acad_dept == input$select_dept & major == input$select_major)
-      #   }
+      "graduation_by_major" = {
+        req(input$select_major)
+        if(input$select_major == "Entire department") {
+          prop <- graduation_by |>
+            filter(acad_dept == input$select_dept)
+        } else {
+          prop <- graduation_by |>
+            filter(acad_dept == input$select_dept & major == input$select_major)
+        }
 
-      #   prop |>
-      #     ggplot(aes(x = fct(precise_years))) +
-      #     geom_bar(fill = "#533860") +
-      #     labs(
-      #      title = sprintf("Years to Graduation — %s", input$select_major),
-      #       subtitle = "Retention and graduation, by years to graduate",
-      #       x = "Years to graduate",
-      #       y = "# of students"
-      #     ) +
-      #     theme_minimal() +
-      #     theme(
-      #       plot.title = element_text(family = "Proxima Nova"),
-      #       text = element_text(family = "Roboto Slab")
-      #     )
-      # },
+        prop |>
+          ggplot(aes(x = factor(precise_years))) +
+          geom_bar(fill = "#533860") +
+          labs(
+           title = sprintf("Years to Graduation — %s", input$select_major),
+            subtitle = "Years to graduation from beginning of data (2020), by years to graduate",
+            x = "Years to graduate",
+            y = "Number of students"
+          ) +
+          theme_minimal() +
+          theme(
+            plot.title = element_text(family = "Proxima Nova"),
+            text = element_text(family = "Roboto Slab")
+          )
+      },
       "status_by_demographic" = {
         req(input$select_demographic)
-        prop <- status_by |>
+        prop <- filtered_data |>
           filter(acad_dept == input$select_dept)
+
+        if(demo_col() == "race_ethnicity") {
+          prop <- prop |> 
+            mutate(race_ethnicity = if_else(race_ethnicity == "NA", NA, race_ethnicity)) |> 
+            drop_na(race_ethnicity)
+        }
 
         prop |>
           ggplot(aes(x = .data[[demo_col()]], fill = status)) +
@@ -391,50 +441,34 @@ server <- function(input, output, session) {
             text = element_text(family = "Roboto Slab")
           )
       },
-      "yr_to_grad_by_major" = {
+      "graduation_by_demographic" = {
+        req(input$select_demographic)
+        prop <- graduation_by |>
+          filter(acad_dept == input$select_dept)
+
+        if(demo_col() == "race_ethnicity") {
+          prop <- prop |> 
+            mutate(race_ethnicity = if_else(race_ethnicity == "NA", NA, race_ethnicity)) |> 
+            drop_na(race_ethnicity)
+        }
+
         prop |>
-          ggplot(aes(x = years_to_grad, fill = status)) +
-          geom_bar() +
+          ggplot(aes(x = .data[[demo_col()]], fill = factor(precise_years))) +
+          geom_bar(position = "fill") +
           labs(
-            title = "Years to Graduation by Major",
-            x = "Years to Graduate",
-            y = "Number of Students",
-            fill = "Student status"
+            title = sprintf("Years to Graduation — %s", demo_name()),
+            subtitle = sprintf("Years to graduation from beginning of dataset (2020), by %s", demo_name()),
+            fill = "Years to graduation",
+            x = demo_name(),
+            y = "Proporation of students"
           ) +
           theme_minimal() +
           scale_y_continuous(labels = scales::percent) +
-          scale_fill_manual(
-            values = c(
-              "Currently Enrolled" = "#533860",
-              "Graduated" = "#FFF42A",
-              "Unenrolled" = "#494C5A"
-            )
-          ) +
+          scale_fill_discrete(palette = c("#533860", "#FFF42A", "#228B22", "#00BFFF", "#E2725B")) +
           theme(
             plot.title = element_text(family = "Proxima Nova"),
             text = element_text(family = "Roboto Slab")
           )
-        # },
-        # "graduation_by_demographic" = {
-        #   req(input$select_demographic)
-        #   prop <- status_by |>
-        #     filter(acad_dept == input$select_dept)
-
-        #   prop |>
-        #     ggplot(aes(x = .data[[demo_col()]], fill = fct(precise_years))) +
-        #     geom_bar(position = "fill") +
-        #     labs(
-        #      title = sprintf("Years to Graduation — %s", demo_name()),
-        #       subtitle = sprintf("Years to graduate, by %s", demo_name()),
-        #       x = "Years to graduate",
-        #       y = "Proporation of students"
-        #     ) +
-        #     theme_minimal() +
-        #     scale_y_continuous(labels = scales::percent) +
-        #     theme(
-        #       plot.title = element_text(family = "Proxima Nova"),
-        #       text = element_text(family = "Roboto Slab")
-        #     )
       },
       "switch_by_demographic" = {
         req(input$select_demographic)
@@ -442,11 +476,17 @@ server <- function(input, output, session) {
         prop <- filtered_data |>
           filter(acad_dept == input$select_dept) |>
           mutate(
-            switched_majors = fct(
+            switched_majors = factor(
               as.character(switched_majors),
               levels = c("TRUE", "FALSE")
             )
           )
+        
+        if(demo_col() == "race_ethnicity") {
+          prop <- prop |> 
+            mutate(race_ethnicity = if_else(race_ethnicity == "NA", NA, race_ethnicity)) |> 
+            drop_na(race_ethnicity)
+        }
 
         prop |>
           ggplot(aes(x = .data[[demo_col()]], fill = switched_majors)) +
@@ -460,6 +500,7 @@ server <- function(input, output, session) {
           ) +
           theme_minimal() +
           scale_y_continuous(labels = scales::percent) +
+          scale_x_discrete(labels = c("TRUE" = "Recipient", "FALSE" = "Non-recipient")) +
           scale_fill_manual(
             values = c(
               "FALSE" = "#533860",
