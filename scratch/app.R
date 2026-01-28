@@ -29,6 +29,7 @@ dept <- outcomes_data |>
   pull() |>
   sort()
 
+# something about this has almost all majors in every department and doesn't list in the select_major
 majors_by_dept <- outcomes_data |>
   distinct(stc_person, .keep_all = TRUE) |>
   select(
