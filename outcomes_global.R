@@ -190,5 +190,5 @@ cleaned_data <- cleaned_data |>
 
 write_csv(
   cleaned_data,
-  "data/clean/registrar_cleaned.csv"
+  "data/clean/outcome_registrar_cleaned.csv"
 )

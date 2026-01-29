@@ -6,7 +6,7 @@ library(vroom)
 library(scales)
 
 # outcomes variables
-outcomes_data <- vroom("../data/clean/registrar_cleaned.csv")
+outcomes_data <- vroom("../data/clean/outcome_registrar_cleaned.csv")
 
 outcome_plots <- list(
   "By major" = c(
