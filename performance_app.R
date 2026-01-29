@@ -129,7 +129,7 @@ server <- function(input, output, session) {
 
   ### Performance Tab ###
   # Performance server stuff goes here!
-  source("scratch\\performance_global.R")
+  source("scratch/performance_global.R")
 
   dfw_rates_grouped <- reactive({
     if (input$dfwdem == "NULL") {
